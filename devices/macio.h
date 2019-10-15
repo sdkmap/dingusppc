@@ -35,6 +35,7 @@
 #include "memctrlbase.h"
 #include "mmiodevice.h"
 #include "pcihost.h"
+#include "awacs.h"
 #include "viacuda.h"
 #include "nvram.h"
 
@@ -104,8 +105,9 @@ private:
     uint32_t feat_ctrl;  // features control register
 
     /* device cells */
-    ViaCuda *viacuda; /* VIA cell with Cuda MCU attached to it */
-    NVram *nvram; /* NVRAM cell */
+    ViaCuda *viacuda;      /* VIA cell with Cuda MCU attached to it */
+    NVram   *nvram;        /* NVRAM cell */
+    AWACDevice * screamer; /* Screamer audio codec instance */
 };
 
 #endif /* MACIO_H */

@@ -8,6 +8,7 @@
 #include <cinttypes>
 #include <iostream>
 #include "macio.h"
+#include "awacs.h"
 #include "viacuda.h"
 
 /** Heathrow Mac I/O device emulation.
@@ -19,15 +20,18 @@ using namespace std;
 
 HeathrowIC::HeathrowIC() : PCIDevice("mac-io/heathrow")
 {
-    this->viacuda = new ViaCuda();
-    this->nvram   = new NVram();
+    /* initialize subdevices. */
+    this->viacuda  = new ViaCuda();
+    this->nvram    = new NVram();
+    this->screamer = new AWACDevice();
 }
 
 HeathrowIC::~HeathrowIC()
 {
+    if (this->screamer)
+        delete(this->screamer);
     if (this->nvram)
         delete(this->nvram);
-
     if (this->viacuda)
         delete(this->viacuda);
 }
@@ -77,7 +81,8 @@ uint32_t HeathrowIC::read(uint32_t offset, int size)
         cout << "DMA channel register space" << endl;
         break;
     case 0x14:
-        cout << "AWACS-Screamer register space" << endl;
+        //cout << "AWACS-Screamer register space" << endl;
+        res = this->screamer->snd_ctrl_read(offset - 0x14000, size);
         break;
     case 0x16:
     case 0x17:
@@ -107,7 +112,8 @@ void HeathrowIC::write(uint32_t offset, uint32_t value, int size)
         cout << "DMA channel register space" << endl;
         break;
     case 0x14:
-        cout << "AWACS-Screamer register space" << endl;
+        //cout << "AWACS-Screamer register space" << endl;
+        this->screamer->snd_ctrl_write(offset - 0x14000, value, size);
         break;
     case 0x16:
     case 0x17:
