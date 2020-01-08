@@ -1367,7 +1367,8 @@ void ppc_mftb(){
     reg_d = (ppc_cur_instruction >> 21) & 31;
     switch(ref_spr){
         case 268:
-            ppc_state.ppc_gpr[reg_d] = ppc_state.ppc_tbr[0];
+            //ppc_state.ppc_gpr[reg_d] = ppc_state.ppc_tbr[0];
+            ppc_state.ppc_gpr[reg_d] = timebase_counter & 0xFFFFFFFFUL;
             break;
         case 269:
             ppc_state.ppc_gpr[reg_d] = ppc_state.ppc_tbr[1];

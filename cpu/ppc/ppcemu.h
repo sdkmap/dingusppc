@@ -96,6 +96,8 @@ SUPERVISOR MODEL
 536 - 543 are the Data BAT registers
 **/
 
+extern uint64_t timebase_counter;
+
 extern uint32_t return_value; //used for loading from memory
 
 extern uint32_t opcode_value; //used for interpreting opcodes
