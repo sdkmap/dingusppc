@@ -1309,7 +1309,7 @@ void ppc_mtmsr(){
 void ppc_mfspr(){
     uint32_t ref_spr = (((ppc_cur_instruction >> 11) & 31) << 5) | ((ppc_cur_instruction >> 16) & 31);
 
-#ifdef PROFILER    
+#ifdef PROFILER
     if (ref_spr > 31) {
         supervisor_inst_num++;
     }
@@ -1322,7 +1322,7 @@ void ppc_mtspr(){
     uint32_t ref_spr = (((ppc_cur_instruction >> 11) & 31) << 5) | ((ppc_cur_instruction >> 16) & 31);
     reg_s = (ppc_cur_instruction >> 21) & 31;
 
-#ifdef PROFILER    
+#ifdef PROFILER
     if (ref_spr > 31) {
         supervisor_inst_num++;
     }
@@ -1885,11 +1885,12 @@ void ppc_stbx(){
 
 void ppc_stbu(){
     ppc_grab_regssa();
-    grab_d = (uint32_t)((int32_t)((int16_t)(ppc_cur_instruction & 0xFFFF)));
-    if (reg_a != 0){
-        ppc_effective_address = (reg_a == 0)?grab_d:(ppc_result_a + grab_d);
-        address_quickinsert_translate(ppc_result_d, ppc_effective_address, 1);
+    if (reg_a == 0) {
+        ppc_exception_handler(Except_Type::EXC_PROGRAM, 0x20000);
     }
+    ppc_effective_address = ppc_result_a + (int32_t)((int16_t)(ppc_cur_instruction & 0xFFFF));
+    address_quickinsert_translate(ppc_result_d, ppc_effective_address, 1);
+    ppc_state.ppc_gpr[reg_a] = ppc_effective_address;
 }
 
 void ppc_stbux(){
