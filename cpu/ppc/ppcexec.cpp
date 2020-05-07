@@ -46,6 +46,9 @@ bool grab_exception;
 bool grab_return;
 bool grab_breakpoint;
 
+bool rc_flag;
+bool oe_flag;
+
 uint32_t ppc_cur_instruction; //Current instruction for the PPC
 uint32_t ppc_effective_address;
 uint32_t ppc_next_instruction_address; //Used for branching, setting up the NIA
@@ -85,87 +88,38 @@ static PPCOpcode SubOpcode18Grabber[] = {
 };
 
 /** General conditional register instructions decoding table. */
-static std::unordered_map<uint16_t, PPCOpcode> SubOpcode19Grabber = {
-    {  32, &ppc_bclr},   {  33, &ppc_bclrl}, { 66, &ppc_crnor}, {100, &ppc_rfi},
-    { 258, &ppc_crandc}, { 300, &ppc_isync}, {386, &ppc_crxor}, {450, &ppc_crnand},
-    { 514, &ppc_crand},  { 578, &ppc_creqv}, {834, &ppc_crorc}, {898, &ppc_cror},
-    {1056, &ppc_bcctr},  {1057, &ppc_bcctrl}
+
+static const PPCOpcode PPCIndexedLoadStore [32] = {
+    ppc_lwzx,           ppc_lwzux,          ppc_lbzx,           ppc_lbzux,
+    ppc_stwx,           ppc_stwux,          ppc_stbx,           ppc_stbux,
+    ppc_lhzx,           ppc_lhzux,          ppc_lhax,           ppc_lhaux,
+    ppc_sthx,           ppc_sthux,          ppc_illegalsubop31, ppc_illegalsubop31,
+    ppc_lfsx,           ppc_lfsux,          ppc_lfdx,           ppc_lfdux,
+    ppc_stfsx,          ppc_stfsux,         ppc_stfdx,          ppc_stfdux,
+    ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
+    ppc_illegalsubop31, ppc_illegalsubop31, ppc_stfiwx,         ppc_illegalsubop31
 };
 
-/** General integer instructions decoding table. */
-static std::unordered_map<uint16_t, PPCOpcode> SubOpcode31Grabber = {
-    {   0, &ppc_cmp},         {   8, &ppc_tw},         {  16, &ppc_subfc},
-    {  17, &ppc_subfcdot},    {  20, &ppc_addc},       {  21, &ppc_addcdot},
-    {  22, &ppc_mulhwu},      {  23, &ppc_mulhwudot},  {  38, &ppc_mfcr},
-    {  40, &ppc_lwarx},       {  46, &ppc_lwzx},       {  48, &ppc_slw},
-    {  49, &ppc_slwdot},      {  52, &ppc_cntlzw},     {  53, &ppc_cntlzwdot},
-    {  56, &ppc_and},         {  57, &ppc_anddot},     {  58, &power_maskg},
-    {  59, &power_maskgdot},  {  64, &ppc_cmpl},       {  80, &ppc_subf},
-    {  81, &ppc_subfdot},     { 108, &ppc_dcbst},      { 110, &ppc_lwzux},
-    { 120, &ppc_andc},        { 121, &ppc_andcdot},    { 150, &ppc_mulhw},
-    { 151, &ppc_mulhwdot},    { 166, &ppc_mfmsr},      { 172, &ppc_dcbf},
-    { 174, &ppc_lbzx},        { 208, &ppc_neg},        { 209, &ppc_negdot},
-    { 214, &power_mul},       { 215, &power_muldot},   { 238, &ppc_lbzux},
-    { 248, &ppc_nor},         { 249, &ppc_nordot},     { 272, &ppc_subfe},
-    { 273, &ppc_subfedot},    { 276, &ppc_adde},       { 277, &ppc_addedot},
-    { 288, &ppc_mtcrf},       { 292, &ppc_mtmsr},      { 301, &ppc_stwcx},
-    { 302, &ppc_stwx},        { 304, &power_slq},      { 305, &power_slqdot},
-    { 306, &power_sle},       { 307, &power_sledot},   { 366, &ppc_stwux},
-    { 368, &power_sliq},      { 400, &ppc_subfze},     { 401, &ppc_subfzedot},
-    { 404, &ppc_addze},       { 405, &ppc_addzedot},   { 420, &ppc_mtsr},
-    { 430, &ppc_stbx},        { 432, &power_sllq},     { 433, &power_sllqdot},
-    { 434, &power_sleq},      { 436, &power_sleqdot},  { 464, &ppc_subfme},
-    { 465, &ppc_subfmedot},   { 468, &ppc_addme},      { 469, &ppc_addmedot},
-    { 470, &ppc_mullw},       { 471, &ppc_mullwdot},   { 484, &ppc_mtsrin},
-    { 492, &ppc_dcbtst},      { 494, &ppc_stbux},      { 496, &power_slliq},
-    { 497, &power_slliqdot},  { 528, &power_doz},      { 529, &power_dozdot},
-    { 532, &ppc_add},         { 533, &ppc_adddot},     { 554, &power_lscbx},
-    { 555, &power_lscbxdot},  { 556, &ppc_dcbt},       { 558, &ppc_lhzx},
-    { 568, &ppc_eqv},         { 569, &ppc_eqvdot},     { 612, &ppc_tlbie},
-    { 622, &ppc_lhzux},       { 632, &ppc_xor},        { 633, &ppc_xordot},
-    { 662, &power_div},       { 663, &power_divdot},   { 678, &ppc_mfspr},
-    { 686, &ppc_lhax},        { 720, &power_abs},      { 721, &power_absdot},
-    { 726, &power_divs},      { 727, &power_divsdot},  { 740, &ppc_tlbia},
-    { 742, &ppc_mftb},        { 750, &ppc_lhaux},      { 814, &ppc_sthx},
-    { 824, &ppc_orc},         { 825, &ppc_orcdot},     { 878, &ppc_sthx},
-    { 888, &ppc_or},          { 889, &ppc_ordot},      { 918, &ppc_divwu},
-    { 919, &ppc_divwudot},    { 934, &ppc_mtspr},      { 940, &ppc_dcbi},
-    { 952, &ppc_nand},        { 953, &ppc_nanddot},    { 976, &power_nabs},
-    { 977, &power_nabsdot},   { 982, &ppc_divw},       { 983, &ppc_divwdot},
-    {1024, &ppc_mcrxr},       {1040, &ppc_subfco},     {1041, &ppc_subfcodot},
-    {1044, &ppc_addco},       {1045, &ppc_addcodot},   {1062, &power_clcs},
-    {1063, &power_clcsdot},   {1066, &ppc_lswx},       {1068, &ppc_lwbrx},
-    {1070, &ppc_lfsx},        {1072, &ppc_srw},        {1073, &ppc_srwdot},
-    {1074, &power_rrib},      {1075, &power_rribdot},  {1082, &power_maskir},
-    {1083, &power_maskirdot}, {1104, &ppc_subfo},      {1105, &ppc_subfodot},
-    {1132, &ppc_tlbsync},     {1134, &ppc_lfsux},      {1190, &ppc_mfsr},
-    {1194, &ppc_lswi},        {1196, &ppc_sync},       {1198, &ppc_lfdx},
-    {1232, &ppc_nego},        {1233, &ppc_negodot},    {1238, &power_mulo},
-    {1239, &power_mulodot},   {1262, &ppc_lfdux},      {1296, &ppc_subfeo},
-    {1297, &ppc_subfeodot},   {1300, &ppc_addeo},      {1301, &ppc_addeodot},
-    {1318, &ppc_mfsrin},      {1322, &ppc_stswx},      {1324, &ppc_stwbrx},
-    {1326, &ppc_stfsx},       {1328, &power_srq},      {1329, &power_srqdot},
-    {1330, &power_sre},       {1331, &power_sredot},   {1390, &ppc_stfsux},
-    {1392, &power_sriq},      {1393, &power_sriqdot},  {1424, &ppc_subfzeo},
-    {1425, &ppc_subfzeodot},  {1428, &ppc_addzeo},     {1429, &ppc_addzeodot},
-    {1450, &ppc_stswi},       {1454, &ppc_stfdx},      {1456, &power_srlq},
-    {1457, &power_srlqdot},   {1458, &power_sreq},     {1459, &power_sreqdot},
-    {1488, &ppc_subfmeo},     {1489, &ppc_subfmeodot}, {1492, &ppc_addmeo},
-    {1493, &ppc_addmeodot},   {1494, &ppc_mullwo},     {1495, &ppc_mullwodot},
-    {1518, &ppc_stfdux},      {1520, &power_srliq},    {1521, &power_srliqdot},
-    {1552, &power_dozo},      {1553, &power_dozodot},  {1556, &ppc_addo},
-    {1557, &ppc_addodot},     {1580, &ppc_lhbrx},      {1584, &ppc_sraw},
-    {1585, &ppc_srawdot},     {1648, &ppc_srawi},      {1649, &ppc_srawidot},
-    {1686, &power_divo},      {1687, &power_divodot},  {1708, &ppc_eieio},
-    {1744, &power_abso},      {1745, &power_absodot},  {1750, &power_divso},
-    {1751, &power_divsodot},  {1836, &ppc_sthbrx},     {1840, &power_sraq},
-    {1841, &power_sraqdot},   {1842, &power_srea},     {1843, &power_sreadot},
-    {1844, &ppc_extsh},       {1845, &ppc_extshdot},   {1904, &power_sraiq},
-    {1905, &power_sraiqdot},  {1908, &ppc_extsb},      {1909, &ppc_extsbdot},
-    {1942, &ppc_divwuo},      {1943, &ppc_divwuodot},  {1956, &ppc_tlbld},
-    {1964, &ppc_icbi},        {1966, &ppc_stfiwx},     {2000, &power_nabso},
-    {2001, &power_nabsodot},  {2006, &ppc_divwo},      {2007, &ppc_divwodot},
-    {2020, &ppc_tlbli},       {2028, &ppc_dcbz}
+static const PPCOpcode PPCRegularShift[32] = {
+    ppc_slw,            ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
+    power_slq,          power_sliq,         power_sllq,         power_slliq,
+    ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
+    ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
+    ppc_srw,            ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
+    power_srq,          power_sriq,         power_srlq,         power_srliq,
+    ppc_sraw,           ppc_srawi,          ppc_illegalsubop31, ppc_illegalsubop31,
+    power_sraq,         power_sraiq,        ppc_illegalsubop31, ppc_illegalsubop31
+};
+
+static const PPCOpcode PPCProcMgmt[32] = {
+    ppc_illegalsubop31, ppc_dcbst,          ppc_dcbf,           ppc_illegalsubop31,
+    ppc_stwcx,          ppc_illegalsubop31, ppc_illegalsubop31, ppc_dcbtst,
+    ppc_dcbt,           ppc_eciwx,          ppc_illegalsubop31, ppc_illegalsubop31,
+    ppc_illegalsubop31, ppc_ecowx,          ppc_dcbi,           ppc_illegalsubop31,
+    ppc_lwbrx,          ppc_tlbsync,        ppc_sync,           ppc_illegalsubop31,
+    ppc_stwbrx,         ppc_illegalsubop31, ppc_illegalsubop31, ppc_dcba,
+    ppc_lhbrx,          ppc_illegalsubop31, ppc_eieio,          ppc_illegalsubop31,
+    ppc_sthbrx,         ppc_illegalsubop31, ppc_icbi,           ppc_dcbz
 };
 
 /** Single-precision floating-point instructions decoding table. */
@@ -435,11 +389,34 @@ void ppc_illegalop() {
     exit(-1);
 }
 
+void ppc_illegalsubop19() {
+    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint32_t grab_it = (uint32_t)illegal_subcode;
+    LOG_F(ERROR, "Illegal subopcode for 19 reported: %d Report this! \n", grab_it);
+    exit(-1);
+}
+
 void ppc_illegalsubop31() {
     uint16_t illegal_subcode = ppc_cur_instruction & 2047;
     uint32_t grab_it = (uint32_t)illegal_subcode;
     LOG_F(ERROR, "Illegal subopcode for 31 reported: %d Report this! \n", grab_it);
+    exit(-1);
 }
+
+void ppc_illegalsubop59() {
+    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint32_t grab_it = (uint32_t)illegal_subcode;
+    LOG_F(ERROR, "Illegal subopcode for 59 reported: %d Report this! \n", grab_it);
+    exit(-1);
+}
+
+void ppc_illegalsubop63() {
+    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint32_t grab_it = (uint32_t)illegal_subcode;
+    LOG_F(ERROR, "Illegal subopcode for 63 reported: %d Report this! \n", grab_it);
+    exit(-1);
+}
+
 
 void ppc_opcode4() {
     LOG_F(INFO, "Reading from Opcode 4 table \n");
@@ -460,70 +437,353 @@ void ppc_opcode18() {
 
 void ppc_opcode19() {
     uint16_t subop_grab = ppc_cur_instruction & 2047;
+
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
     LOG_F(INFO, "Executing Opcode 19 table subopcode entry \n", regrab);
-    if (SubOpcode19Grabber.count(subop_grab) == 1) {
-        SubOpcode19Grabber[subop_grab]();
+#endif // EXHAUSTIVE_DEBUG
+
+    if (subop_grab == 32) {
+        ppc_bclr();
+    }
+    else if (subop_grab == 33) {
+        ppc_bclrl();
+}
+    else if (subop_grab == 1056) {
+        ppc_bcctr();
+    }
+    else if (subop_grab == 1057) {
+        ppc_bcctrl();
+
     }
     else {
-        LOG_F(ERROR, "ILLEGAL SUBOPCODE: %d \n", subop_grab);
-        ppc_exception_handler(Except_Type::EXC_PROGRAM, 0x80000);
+        switch (subop_grab) {
+        case 66:
+            ppc_crnor();
+            break;
+        case 100:
+            ppc_rfi();
+            break;
+        case 258:
+            ppc_crandc();
+            break;
+        case 300:
+            ppc_isync();
+            break;
+        case 386:
+            ppc_crxor();
+            break;
+        case 450:
+            ppc_crnand();
+            break;
+        case 514:
+            ppc_crand();
+            break;
+        case 578:
+            ppc_creqv();
+            break;
+        case 834:
+            ppc_crorc();
+            break;
+        case 898:
+            ppc_cror();
+            break;
+        default: //Illegal opcode - should never happen
+            ppc_illegalsubop19();
+        }
     }
-#else
-    SubOpcode19Grabber[subop_grab]();
-#endif // EXHAUSTIVE_DEBUG
 }
 
 void ppc_opcode31() {
     uint16_t subop_grab = ppc_cur_instruction & 2047;
+    uint16_t subop_lower = (ppc_cur_instruction & 0x3E) >> 1;
+    uint16_t subop_upper = (ppc_cur_instruction & 0x7C0) >> 6;
+    rc_flag = subop_grab & 0x1;
+    oe_flag = subop_grab & 0x400;
+
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
     LOG_F(INFO, "Executing Opcode 31 table subopcode entry \n", regrab);
-    if (SubOpcode31Grabber.count(subop_grab) == 1) {
-        SubOpcode31Grabber[subop_grab]();
-    }
-    else {
-        LOG_F(ERROR, "ILLEGAL SUBOPCODE: %d \n", subop_grab);
-        ppc_exception_handler(Except_Type::EXC_PROGRAM, 0x80000);
-    }
-#else
-    SubOpcode31Grabber[subop_grab]();
 #endif // EXHAUSTIVE_DEBUG
+
+    switch (subop_lower) {
+    case 0:
+        if (subop_upper == 0) {
+            ppc_cmp();
+        }
+        else if (subop_upper == 1) {
+            ppc_cmpl();
+        }
+        else if (subop_upper == 8) {
+            ppc_mcrxr();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 4:
+        if (subop_upper == 0) {
+            ppc_tw();
+        }
+        else if (subop_upper == 1) {
+            ppc_lwarx();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 8: //Subtraction, Negation, DOZ, (N)ABS
+        if ((subop_upper == 0) || (subop_upper = 16)) {
+            ppc_subfc();
+        }
+        else if ((subop_upper == 1) || (subop_upper = 17)) {
+            ppc_subf();
+        }
+        else if ((subop_upper == 3) || (subop_upper = 19)) {
+            ppc_neg();
+        }
+        else if ((subop_upper == 4) || (subop_upper = 20)) {
+            ppc_subfe();
+        }
+        else if ((subop_upper == 6) || (subop_upper = 22)) {
+            ppc_subfze();
+        }
+        else if ((subop_upper == 7) || (subop_upper = 23)){
+            ppc_subfme();
+        }
+        else if ((subop_upper == 8) || (subop_upper = 24)){
+            power_doz();
+        }
+        else if ((subop_upper == 11) || (subop_upper = 27)) {
+            power_abs();
+        }
+        else if ((subop_upper == 15) || (subop_upper = 31)) {
+            power_nabs();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 9:
+        if (subop_upper == 18) {
+            ppc_mfsr();
+        }
+        else if (subop_upper == 20) {
+            ppc_mfsrin();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 10: //Addition
+        if ((subop_upper == 0) || (subop_upper == 16)) {
+            ppc_addc();
+        }
+        else if ((subop_upper == 4) || (subop_upper == 20)) {
+            ppc_adde();
+        }
+        else if ((subop_upper == 6) || (subop_upper == 22)) {
+            ppc_addze();
+        }
+        else if ((subop_upper == 7) || (subop_upper == 23)) {
+            ppc_addme();
+        }
+        else if ((subop_upper == 8) || (subop_upper == 24)) {
+            ppc_add();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 11: //Multiplication & Division
+        if ((subop_upper == 0) || (subop_upper == 16)) {
+            ppc_mulhwu();
+        }
+        else if ((subop_upper == 2) || (subop_upper == 18)) {
+            ppc_mulhwu();
+        }
+        else if ((subop_upper == 3) || (subop_upper == 19)) {
+            power_mul();
+        }
+        else if ((subop_upper == 7) || (subop_upper == 23)) {
+            ppc_mullw();
+        }
+        else if ((subop_upper == 10) || (subop_upper == 26)) {
+            power_div();
+        }
+        else if ((subop_upper == 11) || (subop_upper == 27)) {
+            power_divs();
+        }
+        else if ((subop_upper == 14) || (subop_upper == 30)) {
+            ppc_divwu();
+        }
+        else if ((subop_upper == 15) || (subop_upper == 31)) {
+            ppc_divw();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 18: //Segment Register + supplementary TLB functions
+        if (subop_upper == 4) {
+            ppc_mtmsr();
+        }
+        else if (subop_upper == 6) {
+            ppc_mtsr();
+        }
+        else if (subop_upper == 7) {
+            ppc_mtsrin();
+        }
+        else if (subop_upper == 9) {
+            ppc_tlbie();
+        }
+        else if (subop_upper == 11) {
+            ppc_tlbia();
+        }
+        else if (subop_upper == 30) {
+            ppc_tlbld();
+        }
+        else if (subop_upper == 31) {
+            ppc_tlbli();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 19:
+        if (subop_upper == 0) {
+            ppc_mfcr();
+        }
+        else if (subop_upper == 2) {
+            ppc_mfmsr();
+        }
+        else if (subop_upper == 10) {
+            ppc_mfspr();
+        }
+        else if (subop_upper == 11) {
+            ppc_mftb();
+        }
+        else if (subop_upper == 14) {
+            ppc_mtspr();
+        }
+        else if (subop_upper == 16) {
+            power_clcs();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 20:
+        if (subop_upper == 0) {
+            ppc_lwarx();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 21:
+        if (subop_upper == 4) {
+            power_lscbx();
+        }
+        else if (subop_upper == 16) {
+            ppc_lswx();
+        }
+        else if (subop_upper == 18) {
+            ppc_lswi();
+        }
+        else if (subop_upper == 20) {
+            ppc_stswx();
+        }
+        else if (subop_upper == 22) {
+            ppc_stswi();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 22: //Processor Management
+        PPCProcMgmt[subop_upper]();
+        break;
+    case 23: //Indexed loading and storing functions
+        PPCIndexedLoadStore[subop_upper]();
+        break;
+    case 24:
+        PPCRegularShift[subop_upper]();
+        break;
+    case 26:
+        if (subop_upper == 0)
+            ppc_cntlzw();
+        else if (subop_upper == 28)
+            ppc_extsh();
+        else if (subop_upper == 29)
+            ppc_extsb();
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 28: //Boolean operations
+        if (subop_upper == 0) {
+            ppc_and();
+        }
+        else if (subop_upper == 1) {
+            ppc_andc();
+        }
+        else if (subop_upper == 3) {
+            ppc_nor();
+        }
+        else if (subop_upper == 8) {
+            ppc_eqv();
+        }
+        else if (subop_upper == 9) {
+            ppc_xor();
+        }
+        else if (subop_upper == 12) {
+            ppc_orc();
+        }
+        else if (subop_upper == 13) {
+            ppc_or();
+        }
+        else if (subop_upper == 14) {
+            ppc_nand();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    case 29:
+        if (subop_upper == 0) {
+            power_maskg();
+        }
+        else if (subop_upper == 16) {
+            power_maskir();
+        }
+        else {
+            ppc_illegalsubop31();
+        }
+        break;
+    default:
+        ppc_illegalsubop31();
+    }
 }
 
 void ppc_opcode59() {
     uint16_t subop_grab = ppc_cur_instruction & 2047;
+    rc_flag = subop_grab & 1;
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
     LOG_F(INFO, "Executing Opcode 59 table subopcode entry \n", regrab);
-    if (SubOpcode59Grabber.count(subop_grab) == 1) {
-        SubOpcode59Grabber[subop_grab]();
-    }
-    else {
-        LOG_F(ERROR, "ILLEGAL SUBOPCODE: %d \n", subop_grab);
-        ppc_exception_handler(Except_Type::EXC_PROGRAM, 0x80000);
-    }
-#else
-    SubOpcode59Grabber[subop_grab]();
 #endif // EXHAUSTIVE_DEBUG
+    SubOpcode59Grabber[subop_grab]();
 }
 
 void ppc_opcode63() {
     uint16_t subop_grab = ppc_cur_instruction & 2047;
+    rc_flag = subop_grab & 1;
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
     LOG_F(INFO, "Executing Opcode 63 table subopcode entry \n", regrab);
-    if (SubOpcode63Grabber.count(subop_grab) == 1) {
-        SubOpcode63Grabber[subop_grab]();
-    }
-    else {
-        LOG_F(ERROR, "ILLEGAL SUBOPCODE: %d \n", subop_grab);
-        ppc_exception_handler(Except_Type::EXC_PROGRAM, 0x80000);
-    }
-#else
-    SubOpcode63Grabber[subop_grab]();
 #endif // EXHAUSTIVE_DEBUG
+    SubOpcode63Grabber[subop_grab]();
 }
 
 void ppc_main_opcode() {
