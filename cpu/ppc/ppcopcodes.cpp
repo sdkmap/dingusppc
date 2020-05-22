@@ -1473,15 +1473,20 @@ void ppc_stwx() {
 
 void ppc_stwcx() {
     //PLACEHOLDER CODE FOR STWCX - We need to check for reserve memory
-    ppc_grab_regssab();
-    ppc_effective_address = (reg_a == 0) ? ppc_result_b : (ppc_result_a + ppc_result_b);
-    if (ppc_state.reserve) {
-        mem_write_dword(ppc_effective_address, ppc_result_d);
-        ppc_state.cr |= (ppc_state.spr[SPR::XER] & 0x80000000) ? 0x30000000 : 0x20000000;
-        ppc_state.reserve = false;
+    if (rc_flag == 0) {
+        ppc_illegalsubop31();
     }
     else {
-        ppc_state.cr |= (ppc_state.spr[SPR::XER] & 0x80000000) ? 0x10000000 : 0;
+        ppc_grab_regssab();
+        ppc_effective_address = (reg_a == 0) ? ppc_result_b : (ppc_result_a + ppc_result_b);
+        if (ppc_state.reserve) {
+            mem_write_dword(ppc_effective_address, ppc_result_d);
+            ppc_state.cr |= (ppc_state.spr[SPR::XER] & 0x80000000) ? 0x30000000 : 0x20000000;
+            ppc_state.reserve = false;
+        }
+        else {
+            ppc_state.cr |= (ppc_state.spr[SPR::XER] & 0x80000000) ? 0x10000000 : 0;
+        }
     }
 }
 

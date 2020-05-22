@@ -359,28 +359,28 @@ void ppc_illegalop() {
 }
 
 void ppc_illegalsubop19() {
-    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint16_t illegal_subcode = ppc_cur_instruction & 0x7FF;
     uint32_t grab_it = (uint32_t)illegal_subcode;
     LOG_F(ERROR, "Illegal subopcode for 19 reported: %d Report this! \n", grab_it);
     exit(-1);
 }
 
 void ppc_illegalsubop31() {
-    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint16_t illegal_subcode = ppc_cur_instruction & 0x7FF;
     uint32_t grab_it = (uint32_t)illegal_subcode;
     LOG_F(ERROR, "Illegal subopcode for 31 reported: %d Report this! \n", grab_it);
     exit(-1);
 }
 
 void ppc_illegalsubop59() {
-    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint16_t illegal_subcode = ppc_cur_instruction & 0x7FF;
     uint32_t grab_it = (uint32_t)illegal_subcode;
     LOG_F(ERROR, "Illegal subopcode for 59 reported: %d Report this! \n", grab_it);
     exit(-1);
 }
 
 void ppc_illegalsubop63() {
-    uint16_t illegal_subcode = ppc_cur_instruction & 2047;
+    uint16_t illegal_subcode = ppc_cur_instruction & 0x7FF;
     uint32_t grab_it = (uint32_t)illegal_subcode;
     LOG_F(ERROR, "Illegal subopcode for 63 reported: %d Report this! \n", grab_it);
     exit(-1);
@@ -405,7 +405,7 @@ void ppc_opcode18() {
 }
 
 void ppc_opcode19() {
-    uint16_t subop_grab = ppc_cur_instruction & 2047;
+    uint16_t subop_grab = ppc_cur_instruction & 0x7FF;
 
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
@@ -464,7 +464,7 @@ void ppc_opcode19() {
 }
 
 void ppc_opcode31() {
-    uint16_t subop_grab = (ppc_cur_instruction & 2047) >> 1;
+    uint16_t subop_grab = (ppc_cur_instruction & 0x7FF) >> 1;
 
     rc_flag = ppc_cur_instruction & 0x1;
     oe_flag = ppc_cur_instruction & 0x400;
@@ -478,7 +478,7 @@ void ppc_opcode31() {
 }
 
 void ppc_opcode59() {
-    uint16_t subop_grab = ppc_cur_instruction & 2047;
+    uint16_t subop_grab = ppc_cur_instruction & 0x7FF;
     rc_flag = subop_grab & 1;
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
@@ -488,7 +488,7 @@ void ppc_opcode59() {
 }
 
 void ppc_opcode63() {
-    uint16_t subop_grab = ppc_cur_instruction & 2047;
+    uint16_t subop_grab = ppc_cur_instruction & 0x7FF;
     rc_flag = subop_grab & 1;
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
