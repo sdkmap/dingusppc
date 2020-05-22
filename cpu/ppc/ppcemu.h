@@ -260,6 +260,8 @@ void ppc_opcode31();
 void ppc_opcode59();
 void ppc_opcode63();
 
+extern void ppc_init_opcode_tables();
+
 extern bool ppc_confirm_inf_nan(uint64_t input_a, uint64_t input_b, bool is_single, uint32_t op);
 extern double fp_return_double(uint32_t reg);
 extern uint64_t fp_return_uint64(uint32_t reg);

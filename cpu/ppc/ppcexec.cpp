@@ -46,8 +46,8 @@ bool grab_exception;
 bool grab_return;
 bool grab_breakpoint;
 
-bool rc_flag;
-bool oe_flag;
+bool rc_flag = 0;
+bool oe_flag = 0;
 
 uint32_t ppc_cur_instruction; //Current instruction for the PPC
 uint32_t ppc_effective_address;
@@ -89,38 +89,7 @@ static PPCOpcode SubOpcode18Grabber[] = {
 
 /** General conditional register instructions decoding table. */
 
-static const PPCOpcode PPCIndexedLoadStore [32] = {
-    ppc_lwzx,           ppc_lwzux,          ppc_lbzx,           ppc_lbzux,
-    ppc_stwx,           ppc_stwux,          ppc_stbx,           ppc_stbux,
-    ppc_lhzx,           ppc_lhzux,          ppc_lhax,           ppc_lhaux,
-    ppc_sthx,           ppc_sthux,          ppc_illegalsubop31, ppc_illegalsubop31,
-    ppc_lfsx,           ppc_lfsux,          ppc_lfdx,           ppc_lfdux,
-    ppc_stfsx,          ppc_stfsux,         ppc_stfdx,          ppc_stfdux,
-    ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
-    ppc_illegalsubop31, ppc_illegalsubop31, ppc_stfiwx,         ppc_illegalsubop31
-};
-
-static const PPCOpcode PPCRegularShift[32] = {
-    ppc_slw,            ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
-    power_slq,          power_sliq,         power_sllq,         power_slliq,
-    ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
-    ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
-    ppc_srw,            ppc_illegalsubop31, ppc_illegalsubop31, ppc_illegalsubop31,
-    power_srq,          power_sriq,         power_srlq,         power_srliq,
-    ppc_sraw,           ppc_srawi,          ppc_illegalsubop31, ppc_illegalsubop31,
-    power_sraq,         power_sraiq,        ppc_illegalsubop31, ppc_illegalsubop31
-};
-
-static const PPCOpcode PPCProcMgmt[32] = {
-    ppc_illegalsubop31, ppc_dcbst,          ppc_dcbf,           ppc_illegalsubop31,
-    ppc_stwcx,          ppc_illegalsubop31, ppc_illegalsubop31, ppc_dcbtst,
-    ppc_dcbt,           ppc_eciwx,          ppc_illegalsubop31, ppc_illegalsubop31,
-    ppc_illegalsubop31, ppc_ecowx,          ppc_dcbi,           ppc_illegalsubop31,
-    ppc_lwbrx,          ppc_tlbsync,        ppc_sync,           ppc_illegalsubop31,
-    ppc_stwbrx,         ppc_illegalsubop31, ppc_illegalsubop31, ppc_dcba,
-    ppc_lhbrx,          ppc_illegalsubop31, ppc_eieio,          ppc_illegalsubop31,
-    ppc_sthbrx,         ppc_illegalsubop31, ppc_icbi,           ppc_dcbz
-};
+static PPCOpcode SubOpcode31Grabber[2048] = { ppc_illegalsubop31};
 
 /** Single-precision floating-point instructions decoding table. */
 static std::unordered_map<uint16_t, PPCOpcode> SubOpcode59Grabber = {
@@ -495,275 +464,17 @@ void ppc_opcode19() {
 }
 
 void ppc_opcode31() {
-    uint16_t subop_grab = ppc_cur_instruction & 2047;
-    uint16_t subop_lower = (ppc_cur_instruction & 0x3E) >> 1;
-    uint16_t subop_upper = (ppc_cur_instruction & 0x7C0) >> 6;
-    rc_flag = subop_grab & 0x1;
-    oe_flag = subop_grab & 0x400;
+    uint16_t subop_grab = (ppc_cur_instruction & 2047) >> 1;
+
+    rc_flag = ppc_cur_instruction & 0x1;
+    oe_flag = ppc_cur_instruction & 0x400;
 
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
-    LOG_F(INFO, "Executing Opcode 31 table subopcode entry \n", regrab);
+    LOG_F(INFO, "Executing Opcode 63 table subopcode entry \n", regrab);
 #endif // EXHAUSTIVE_DEBUG
 
-    switch (subop_lower) {
-    case 0:
-        if (subop_upper == 0) {
-            ppc_cmp();
-        }
-        else if (subop_upper == 1) {
-            ppc_cmpl();
-        }
-        else if (subop_upper == 8) {
-            ppc_mcrxr();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 4:
-        if (subop_upper == 0) {
-            ppc_tw();
-        }
-        else if (subop_upper == 1) {
-            ppc_lwarx();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 8: //Subtraction, Negation, DOZ, (N)ABS
-        if ((subop_upper == 0) || (subop_upper = 16)) {
-            ppc_subfc();
-        }
-        else if ((subop_upper == 1) || (subop_upper = 17)) {
-            ppc_subf();
-        }
-        else if ((subop_upper == 3) || (subop_upper = 19)) {
-            ppc_neg();
-        }
-        else if ((subop_upper == 4) || (subop_upper = 20)) {
-            ppc_subfe();
-        }
-        else if ((subop_upper == 6) || (subop_upper = 22)) {
-            ppc_subfze();
-        }
-        else if ((subop_upper == 7) || (subop_upper = 23)){
-            ppc_subfme();
-        }
-        else if ((subop_upper == 8) || (subop_upper = 24)){
-            power_doz();
-        }
-        else if ((subop_upper == 11) || (subop_upper = 27)) {
-            power_abs();
-        }
-        else if ((subop_upper == 15) || (subop_upper = 31)) {
-            power_nabs();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 9:
-        if (subop_upper == 18) {
-            ppc_mfsr();
-        }
-        else if (subop_upper == 20) {
-            ppc_mfsrin();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 10: //Addition
-        if ((subop_upper == 0) || (subop_upper == 16)) {
-            ppc_addc();
-        }
-        else if ((subop_upper == 4) || (subop_upper == 20)) {
-            ppc_adde();
-        }
-        else if ((subop_upper == 6) || (subop_upper == 22)) {
-            ppc_addze();
-        }
-        else if ((subop_upper == 7) || (subop_upper == 23)) {
-            ppc_addme();
-        }
-        else if ((subop_upper == 8) || (subop_upper == 24)) {
-            ppc_add();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 11: //Multiplication & Division
-        if ((subop_upper == 0) || (subop_upper == 16)) {
-            ppc_mulhwu();
-        }
-        else if ((subop_upper == 2) || (subop_upper == 18)) {
-            ppc_mulhwu();
-        }
-        else if ((subop_upper == 3) || (subop_upper == 19)) {
-            power_mul();
-        }
-        else if ((subop_upper == 7) || (subop_upper == 23)) {
-            ppc_mullw();
-        }
-        else if ((subop_upper == 10) || (subop_upper == 26)) {
-            power_div();
-        }
-        else if ((subop_upper == 11) || (subop_upper == 27)) {
-            power_divs();
-        }
-        else if ((subop_upper == 14) || (subop_upper == 30)) {
-            ppc_divwu();
-        }
-        else if ((subop_upper == 15) || (subop_upper == 31)) {
-            ppc_divw();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 18: //Segment Register + supplementary TLB functions
-        if (subop_upper == 4) {
-            ppc_mtmsr();
-        }
-        else if (subop_upper == 6) {
-            ppc_mtsr();
-        }
-        else if (subop_upper == 7) {
-            ppc_mtsrin();
-        }
-        else if (subop_upper == 9) {
-            ppc_tlbie();
-        }
-        else if (subop_upper == 11) {
-            ppc_tlbia();
-        }
-        else if (subop_upper == 30) {
-            ppc_tlbld();
-        }
-        else if (subop_upper == 31) {
-            ppc_tlbli();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 19:
-        if (subop_upper == 0) {
-            ppc_mfcr();
-        }
-        else if (subop_upper == 2) {
-            ppc_mfmsr();
-        }
-        else if (subop_upper == 10) {
-            ppc_mfspr();
-        }
-        else if (subop_upper == 11) {
-            ppc_mftb();
-        }
-        else if (subop_upper == 14) {
-            ppc_mtspr();
-        }
-        else if (subop_upper == 16) {
-            power_clcs();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 20:
-        if (subop_upper == 0) {
-            ppc_lwarx();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 21:
-        if (subop_upper == 4) {
-            power_lscbx();
-        }
-        else if (subop_upper == 16) {
-            ppc_lswx();
-        }
-        else if (subop_upper == 18) {
-            ppc_lswi();
-        }
-        else if (subop_upper == 20) {
-            ppc_stswx();
-        }
-        else if (subop_upper == 22) {
-            ppc_stswi();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 22: //Processor Management
-        PPCProcMgmt[subop_upper]();
-        break;
-    case 23: //Indexed loading and storing functions
-        PPCIndexedLoadStore[subop_upper]();
-        break;
-    case 24:
-        PPCRegularShift[subop_upper]();
-        break;
-    case 26:
-        if (subop_upper == 0)
-            ppc_cntlzw();
-        else if (subop_upper == 28)
-            ppc_extsh();
-        else if (subop_upper == 29)
-            ppc_extsb();
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 28: //Boolean operations
-        if (subop_upper == 0) {
-            ppc_and();
-        }
-        else if (subop_upper == 1) {
-            ppc_andc();
-        }
-        else if (subop_upper == 3) {
-            ppc_nor();
-        }
-        else if (subop_upper == 8) {
-            ppc_eqv();
-        }
-        else if (subop_upper == 9) {
-            ppc_xor();
-        }
-        else if (subop_upper == 12) {
-            ppc_orc();
-        }
-        else if (subop_upper == 13) {
-            ppc_or();
-        }
-        else if (subop_upper == 14) {
-            ppc_nand();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    case 29:
-        if (subop_upper == 0) {
-            power_maskg();
-        }
-        else if (subop_upper == 16) {
-            power_maskir();
-        }
-        else {
-            ppc_illegalsubop31();
-        }
-        break;
-    default:
-        ppc_illegalsubop31();
-    }
+    SubOpcode31Grabber[subop_grab]();
 }
 
 void ppc_opcode59() {
@@ -1020,6 +731,145 @@ again:
 }
 #endif
 
+void ppc_opcode31_init() {
+    SubOpcode31Grabber[0] = ppc_cmp;
+    SubOpcode31Grabber[4] = ppc_tw;
+    SubOpcode31Grabber[32] = ppc_cmpl;
+
+    SubOpcode31Grabber[8] = SubOpcode31Grabber[520] = ppc_subfc;
+    SubOpcode31Grabber[40] = SubOpcode31Grabber[552] = ppc_subf;
+    SubOpcode31Grabber[104] = SubOpcode31Grabber[616] = ppc_neg;
+    SubOpcode31Grabber[136] = SubOpcode31Grabber[648] = ppc_subfe;
+    SubOpcode31Grabber[200] = SubOpcode31Grabber[712] = ppc_subfze;
+    SubOpcode31Grabber[232] = SubOpcode31Grabber[744] = ppc_subfme;
+
+    SubOpcode31Grabber[10] = SubOpcode31Grabber[522] = ppc_addc;
+    SubOpcode31Grabber[138] = SubOpcode31Grabber[650] = ppc_adde;
+    SubOpcode31Grabber[202] = SubOpcode31Grabber[714] = ppc_addze;
+    SubOpcode31Grabber[234] = SubOpcode31Grabber[746] = ppc_addme;
+    SubOpcode31Grabber[266] = SubOpcode31Grabber[778] = ppc_add;
+
+    SubOpcode31Grabber[11] = ppc_mulhwu;
+    SubOpcode31Grabber[75] = ppc_mulhw;
+    SubOpcode31Grabber[235] = SubOpcode31Grabber[747] = ppc_mullw;
+    SubOpcode31Grabber[459] = SubOpcode31Grabber[971] = ppc_divwu;
+    SubOpcode31Grabber[491] = SubOpcode31Grabber[1003] = ppc_divw;
+
+    SubOpcode31Grabber[20] = ppc_lwarx;
+    SubOpcode31Grabber[23] = ppc_lwzx;
+    SubOpcode31Grabber[55] = ppc_lwzux;
+    SubOpcode31Grabber[87] = ppc_lbzx;
+    SubOpcode31Grabber[119] = ppc_lbzux;
+    SubOpcode31Grabber[279] = ppc_lhzx;
+    SubOpcode31Grabber[311] = ppc_lhzux;
+    SubOpcode31Grabber[343] = ppc_lhax;
+    SubOpcode31Grabber[375] = ppc_lhaux;
+    SubOpcode31Grabber[533] = ppc_lswx;
+    SubOpcode31Grabber[534] = ppc_lwbrx;
+    SubOpcode31Grabber[535] = ppc_lfsx;
+    SubOpcode31Grabber[567] = ppc_lfsux;
+    SubOpcode31Grabber[597] = ppc_lswi;
+    SubOpcode31Grabber[599] = ppc_lfdx;
+    SubOpcode31Grabber[631] = ppc_lfdux;
+    SubOpcode31Grabber[790] = ppc_lhbrx;
+
+    SubOpcode31Grabber[150] = ppc_stwcx;
+    SubOpcode31Grabber[151] = ppc_stwx;
+    SubOpcode31Grabber[183] = ppc_stwux;
+    SubOpcode31Grabber[215] = ppc_stbx;
+    SubOpcode31Grabber[247] = ppc_stbux;
+    SubOpcode31Grabber[407] = ppc_sthx;
+    SubOpcode31Grabber[439] = ppc_sthux;
+    SubOpcode31Grabber[661] = ppc_stswx;
+    SubOpcode31Grabber[662] = ppc_stwbrx;
+    SubOpcode31Grabber[663] = ppc_stfsx;
+    SubOpcode31Grabber[695] = ppc_stfsux;
+    SubOpcode31Grabber[725] = ppc_stswi;
+    SubOpcode31Grabber[727] = ppc_stfdx;
+    SubOpcode31Grabber[759] = ppc_stfdux;
+    SubOpcode31Grabber[918] = ppc_sthbrx;
+    SubOpcode31Grabber[983] = ppc_stfiwx;
+
+    SubOpcode31Grabber[24] = ppc_slw;
+    SubOpcode31Grabber[28] = ppc_and;
+    SubOpcode31Grabber[60] = ppc_andc;
+    SubOpcode31Grabber[124] = ppc_nor;
+    SubOpcode31Grabber[284] = ppc_eqv;
+    SubOpcode31Grabber[316] = ppc_xor;
+    SubOpcode31Grabber[412] = ppc_orc;
+    SubOpcode31Grabber[444] = ppc_or;
+    SubOpcode31Grabber[476] = ppc_nand;
+    SubOpcode31Grabber[536] = ppc_srw;
+    SubOpcode31Grabber[792] = ppc_sraw;
+    SubOpcode31Grabber[824] = ppc_srawi;
+    SubOpcode31Grabber[922] = ppc_extsh;
+    SubOpcode31Grabber[954] = ppc_extsb;
+
+    SubOpcode31Grabber[26] = ppc_cntlzw;
+
+    SubOpcode31Grabber[19] = ppc_mfcr;
+    SubOpcode31Grabber[83] = ppc_mfmsr;
+    SubOpcode31Grabber[144] = ppc_mtcrf;
+    SubOpcode31Grabber[146] = ppc_mtmsr;
+    SubOpcode31Grabber[210] = ppc_mtsr;
+    SubOpcode31Grabber[242] = ppc_mtsrin;
+    SubOpcode31Grabber[256] = ppc_mcrxr;
+    SubOpcode31Grabber[339] = ppc_mfspr;
+    SubOpcode31Grabber[371] = ppc_mftb;
+    SubOpcode31Grabber[467] = ppc_mtspr;
+    SubOpcode31Grabber[595] = ppc_mfsr;
+    SubOpcode31Grabber[659] = ppc_mfsrin;
+
+    SubOpcode31Grabber[54] = ppc_dcbst;
+    SubOpcode31Grabber[86] = ppc_dcbf;
+    SubOpcode31Grabber[246] = ppc_dcbtst;
+    SubOpcode31Grabber[278] = ppc_dcbt;
+    SubOpcode31Grabber[598] = ppc_sync;
+    SubOpcode31Grabber[470] = ppc_dcbi;
+    SubOpcode31Grabber[1014] = ppc_dcbz;
+
+    SubOpcode31Grabber[29] = power_maskg;
+    SubOpcode31Grabber[107] = SubOpcode31Grabber[619] = power_mul;
+    SubOpcode31Grabber[152] = power_slq;
+    SubOpcode31Grabber[153] = power_sle;
+    SubOpcode31Grabber[184] = power_sliq;
+    SubOpcode31Grabber[216] = power_sllq;
+    SubOpcode31Grabber[217] = power_sleq;
+    SubOpcode31Grabber[248] = power_slliq;
+    SubOpcode31Grabber[264] = SubOpcode31Grabber[776] = power_doz;
+    SubOpcode31Grabber[277] = power_lscbx;
+    SubOpcode31Grabber[331] = SubOpcode31Grabber[843] = power_div;
+    SubOpcode31Grabber[360] = SubOpcode31Grabber[872] = power_abs;
+    SubOpcode31Grabber[363] = SubOpcode31Grabber[875] = power_divs;
+    SubOpcode31Grabber[488] = SubOpcode31Grabber[1000] = power_nabs;
+    SubOpcode31Grabber[531] = power_clcs;
+    SubOpcode31Grabber[537] = power_rrib;
+    SubOpcode31Grabber[541] = power_maskir;
+    SubOpcode31Grabber[664] = power_srq;
+    SubOpcode31Grabber[665] = power_sre;
+    SubOpcode31Grabber[696] = power_sriq;
+    SubOpcode31Grabber[728] = power_srlq;
+    SubOpcode31Grabber[729] = power_sreq;
+    SubOpcode31Grabber[760] = power_srliq;
+    SubOpcode31Grabber[920] = power_sraq;
+    SubOpcode31Grabber[921] = power_srea;
+    SubOpcode31Grabber[952] = power_sraiq;
+
+    SubOpcode31Grabber[306] = ppc_tlbie;
+    SubOpcode31Grabber[370] = ppc_tlbia;
+    SubOpcode31Grabber[566] = ppc_tlbsync;
+    SubOpcode31Grabber[854] = ppc_eieio;
+    SubOpcode31Grabber[982] = ppc_icbi;
+    SubOpcode31Grabber[978] = ppc_tlbld;
+    SubOpcode31Grabber[1010] = ppc_tlbli;
+}
+
+void ppc_init_opcode_tables() {
+    ppc_opcode31_init();
+
+    //TODO: INSERT TABLES FOR OPCODES 59 and 63
+}
+
 void ppc_cpu_init(MemCtrlBase *mem_ctrl, uint32_t proc_version)
 {
     int i;
@@ -1071,6 +921,8 @@ void ppc_cpu_init(MemCtrlBase *mem_ctrl, uint32_t proc_version)
     }
 
     ppc_mmu_init();
+
+    ppc_init_opcode_tables();
 
     /* redirect code execution to reset vector */
     ppc_state.pc = 0xFFF00100;

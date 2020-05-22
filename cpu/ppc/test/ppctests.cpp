@@ -149,6 +149,7 @@ static void read_test_data()
 
 int main()
 {
+    ppc_init_opcode_tables();
 
     cout << "Running DingusPPC emulator tests..." << endl << endl;
 
