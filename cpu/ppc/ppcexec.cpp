@@ -89,265 +89,13 @@ static PPCOpcode SubOpcode18Grabber[] = {
 
 /** General conditional register instructions decoding table. */
 
-static PPCOpcode SubOpcode31Grabber[2048] = { ppc_illegalsubop31};
+static PPCOpcode SubOpcode31Grabber[1024] = { ppc_illegalsubop31 };
 
 /** Single-precision floating-point instructions decoding table. */
-static std::unordered_map<uint16_t, PPCOpcode> SubOpcode59Grabber = {
-    {  36, &ppc_fdivs},       {  37, &ppc_fdivsdot},    {  40, &ppc_fsubs},
-    {  41, &ppc_fsubsdot},    {  42, &ppc_fadds},       {  43, &ppc_faddsdot},
-    {  44, &ppc_fsqrts},      {  45, &ppc_fsqrtsdot},   {  48, &ppc_fres},
-    {  49, &ppc_fresdot},     {  50, &ppc_fmults},      {  51, &ppc_fmultsdot},
-    {  56, &ppc_fmsubs},      {  57, &ppc_fmsubsdot},   {  58, &ppc_fmadds},
-    {  59, &ppc_fmaddsdot},   {  60, &ppc_fnmsubs},     {  61, &ppc_fnmsubsdot},
-    {  62, &ppc_fnmadds},     {  63, &ppc_fnmaddsdot},  { 114, &ppc_fmults},
-    { 115, &ppc_fmultsdot},   { 120, &ppc_fmsubs},      { 121, &ppc_fmsubsdot},
-    { 122, &ppc_fmadds},      { 123, &ppc_fmadds},      { 124, &ppc_fnmsubs},
-    { 125, &ppc_fnmsubsdot},  { 126, &ppc_fnmadds},     { 127, &ppc_fnmaddsdot},
-    { 178, &ppc_fmults},      { 179, &ppc_fmultsdot},   { 184, &ppc_fmsubs},
-    { 185, &ppc_fmsubsdot},   { 186, &ppc_fmadds},      { 187, &ppc_fmaddsdot},
-    { 188, &ppc_fnmsubs},     { 189, &ppc_fnmsubsdot},  { 190, &ppc_fnmadds},
-    { 191, &ppc_fnmaddsdot},  { 242, &ppc_fmults},      { 243, &ppc_fmultsdot},
-    { 248, &ppc_fmsubs},      { 249, &ppc_fmsubsdot},   { 250, &ppc_fmadds},
-    { 251, &ppc_fmaddsdot},   { 252, &ppc_fnmsubs},     { 253, &ppc_fnmsubsdot},
-    { 254, &ppc_fnmadds},     { 255, &ppc_fnmaddsdot},  { 306, &ppc_fmults},
-    { 307, &ppc_fmultsdot},   { 312, &ppc_fmsubs},      { 313, &ppc_fmsubsdot},
-    { 314, &ppc_fmadds},      { 315, &ppc_fmaddsdot},   { 316, &ppc_fnmsubs},
-    { 317, &ppc_fnmsubsdot},  { 318, &ppc_fnmadds},     { 319, &ppc_fnmaddsdot},
-    { 370, &ppc_fmults},      { 371, &ppc_fmultsdot},   { 376, &ppc_fmsubs},
-    { 377, &ppc_fmsubsdot},   { 378, &ppc_fmadds},      { 379, &ppc_fmaddsdot},
-    { 380, &ppc_fnmsubs},     { 381, &ppc_fnmsubsdot},  { 382, &ppc_fnmadds},
-    { 383, &ppc_fnmaddsdot},  { 434, &ppc_fmults},      { 435, &ppc_fmultsdot},
-    { 440, &ppc_fmsubs},      { 441, &ppc_fmsubsdot},   { 442, &ppc_fmadds},
-    { 443, &ppc_fmaddsdot},   { 444, &ppc_fnmsubs},     { 445, &ppc_fnmsubsdot},
-    { 446, &ppc_fnmadds},     { 447, &ppc_fnmaddsdot},  { 498, &ppc_fmults},
-    { 499, &ppc_fmultsdot},   { 504, &ppc_fmsubs},      { 505, &ppc_fmsubsdot},
-    { 506, &ppc_fmadds},      { 507, &ppc_fmaddsdot},   { 508, &ppc_fnmsubs},
-    { 509, &ppc_fnmsubsdot},  { 510, &ppc_fnmadds},     { 511, &ppc_fnmaddsdot},
-    { 562, &ppc_fmults},      { 563, &ppc_fmultsdot},   { 568, &ppc_fmsubs},
-    { 569, &ppc_fmsubsdot},   { 570, &ppc_fmadds},      { 571, &ppc_fmaddsdot},
-    { 572, &ppc_fnmsubs},     { 573, &ppc_fnmsubsdot},  { 574, &ppc_fnmadds},
-    { 575, &ppc_fnmaddsdot},  { 626, &ppc_fmults},      { 627, &ppc_fmultsdot},
-    { 632, &ppc_fmsubs},      { 633, &ppc_fmsubsdot},   { 634, &ppc_fmadds},
-    { 635, &ppc_fmaddsdot},   { 636, &ppc_fnmsubs},     { 637, &ppc_fnmsubsdot},
-    { 638, &ppc_fnmadds},     { 639, &ppc_fnmaddsdot},  { 690, &ppc_fmults},
-    { 691, &ppc_fmultsdot},   { 696, &ppc_fmsubs},      { 697, &ppc_fmsubsdot},
-    { 698, &ppc_fmadds},      { 699, &ppc_fmaddsdot},   { 700, &ppc_fnmsubs},
-    { 701, &ppc_fnmsubsdot},  { 702, &ppc_fnmadds},     { 703, &ppc_fnmaddsdot},
-    { 754, &ppc_fmults},      { 755, &ppc_fmultsdot},   { 760, &ppc_fmsubs},
-    { 761, &ppc_fmsubsdot},   { 762, &ppc_fmadds},      { 763, &ppc_fmaddsdot},
-    { 764, &ppc_fnmsubs},     { 765, &ppc_fnmsubsdot},  { 766, &ppc_fnmadds},
-    { 767, &ppc_fnmaddsdot},  { 818, &ppc_fmults},      { 819, &ppc_fmultsdot},
-    { 824, &ppc_fmsubs},      { 825, &ppc_fmsubsdot},   { 826, &ppc_fmadds},
-    { 827, &ppc_fmaddsdot},   { 828, &ppc_fnmsubs},     { 829, &ppc_fnmsubsdot},
-    { 830, &ppc_fnmadds},     { 831, &ppc_fnmaddsdot},  { 882, &ppc_fmults},
-    { 883, &ppc_fmultsdot},   { 888, &ppc_fmsubs},      { 889, &ppc_fmsubsdot},
-    { 890, &ppc_fmadds},      { 891, &ppc_fmaddsdot},   { 892, &ppc_fnmsubs},
-    { 893, &ppc_fnmsubsdot},  { 894, &ppc_fnmadds},     { 895, &ppc_fnmaddsdot},
-    { 946, &ppc_fmults},      { 947, &ppc_fmultsdot},   { 952, &ppc_fmsubs},
-    { 953, &ppc_fmsubsdot},   { 954, &ppc_fmadds},      { 955, &ppc_fmaddsdot},
-    { 957, &ppc_fnmsubs},     { 958, &ppc_fnmsubsdot},  { 958, &ppc_fnmadds},
-    { 959, &ppc_fnmaddsdot},  {1010, &ppc_fmults},      {1011, &ppc_fmultsdot},
-    {1016, &ppc_fmsubs},      {1017, &ppc_fmsubsdot},   {1018, &ppc_fmadds},
-    {1019, &ppc_fmaddsdot},   {1020, &ppc_fnmsubs},     {1021, &ppc_fnmsubsdot},
-    {1022, &ppc_fnmadds},     {1023, &ppc_fnmaddsdot},  {1074, &ppc_fmults},
-    {1075, &ppc_fmultsdot},   {1080, &ppc_fmsubs},      {1081, &ppc_fmsubsdot},
-    {1082, &ppc_fmadds},      {1083, &ppc_fmaddsdot},   {1084, &ppc_fnmsubs},
-    {1085, &ppc_fnmsubsdot},  {1086, &ppc_fnmadds},     {1087, &ppc_fnmaddsdot},
-    {1138, &ppc_fmults},      {1139, &ppc_fmultsdot},   {1144, &ppc_fmsubs},
-    {1145, &ppc_fmsubsdot},   {1146, &ppc_fmadds},      {1147, &ppc_fmaddsdot},
-    {1148, &ppc_fnmsubs},     {1149, &ppc_fnmsubsdot},  {1150, &ppc_fnmadds},
-    {1151, &ppc_fnmaddsdot},  {1202, &ppc_fmults},      {1203, &ppc_fmultsdot},
-    {1208, &ppc_fmsubs},      {1209, &ppc_fmsubsdot},   {1210, &ppc_fmadds},
-    {1211, &ppc_fmaddsdot},   {1212, &ppc_fnmsubs},     {1213, &ppc_fnmsubsdot},
-    {1214, &ppc_fnmadds},     {1215, &ppc_fnmaddsdot},  {1266, &ppc_fmults},
-    {1267, &ppc_fmultsdot},   {1272, &ppc_fmsubs},      {1273, &ppc_fmsubsdot},
-    {1274, &ppc_fmadds},      {1275, &ppc_fmaddsdot},   {1276, &ppc_fnmsubs},
-    {1277, &ppc_fnmsubsdot},  {1278, &ppc_fnmadds},     {1279, &ppc_fnmaddsdot},
-    {1330, &ppc_fmults},      {1331, &ppc_fmultsdot},   {1336, &ppc_fmsubs},
-    {1337, &ppc_fmsubsdot},   {1338, &ppc_fmadds},      {1339, &ppc_fmaddsdot},
-    {1340, &ppc_fnmsubs},     {1341, &ppc_fnmsubsdot},  {1342, &ppc_fnmadds},
-    {1343, &ppc_fnmaddsdot},  {1394, &ppc_fmults},      {1395, &ppc_fmultsdot},
-    {1400, &ppc_fmsubs},      {1401, &ppc_fmsubsdot},   {1402, &ppc_fmadds},
-    {1403, &ppc_fmaddsdot},   {1404, &ppc_fnmsubs},     {1405, &ppc_fnmsubsdot},
-    {1406, &ppc_fnmadds},     {1407, &ppc_fnmaddsdot},  {1458, &ppc_fmults},
-    {1459, &ppc_fmultsdot},   {1464, &ppc_fmsubs},      {1465, &ppc_fmsubsdot},
-    {1466, &ppc_fmadds},      {1467, &ppc_fmaddsdot},   {1468, &ppc_fnmsubs},
-    {1469, &ppc_fnmsubsdot},  {1470, &ppc_fnmadds},     {1471, &ppc_fnmaddsdot},
-    {1522, &ppc_fmults},      {1523, &ppc_fmultsdot},   {1528, &ppc_fmsubs},
-    {1529, &ppc_fmsubsdot},   {1530, &ppc_fmadds},      {1531, &ppc_fmaddsdot},
-    {1532, &ppc_fnmsubs},     {1533, &ppc_fnmsubsdot},  {1534, &ppc_fnmadds},
-    {1535, &ppc_fnmaddsdot},  {1586, &ppc_fmults},      {1587, &ppc_fmultsdot},
-    {1592, &ppc_fmsubs},      {1593, &ppc_fmsubsdot},   {1594, &ppc_fmadds},
-    {1595, &ppc_fmaddsdot},   {1596, &ppc_fnmsubs},     {1597, &ppc_fnmsubsdot},
-    {1598, &ppc_fnmadds},     {1599, &ppc_fnmaddsdot},  {1650, &ppc_fmults},
-    {1651, &ppc_fmultsdot},   {1656, &ppc_fmsubs},      {1657, &ppc_fmsubsdot},
-    {1658, &ppc_fmadds},      {1659, &ppc_fmaddsdot},   {1660, &ppc_fnmsubs},
-    {1661, &ppc_fnmsubsdot},  {1662, &ppc_fnmadds},     {1663, &ppc_fnmaddsdot},
-    {1714, &ppc_fmults},      {1715, &ppc_fmultsdot},   {1720, &ppc_fmsubs},
-    {1721, &ppc_fmsubsdot},   {1722, &ppc_fmadds},      {1723, &ppc_fmaddsdot},
-    {1724, &ppc_fnmsubs},     {1725, &ppc_fnmsubsdot},  {1726, &ppc_fnmadds},
-    {1727, &ppc_fnmaddsdot},  {1778, &ppc_fmults},      {1779, &ppc_fmultsdot},
-    {1784, &ppc_fmsubs},      {1785, &ppc_fmsubsdot},   {1786, &ppc_fmadds},
-    {1787, &ppc_fmaddsdot},   {1788, &ppc_fnmsubs},     {1789, &ppc_fnmsubsdot},
-    {1790, &ppc_fnmadds},     {1791, &ppc_fnmaddsdot},  {1842, &ppc_fmults},
-    {1843, &ppc_fmultsdot},   {1848, &ppc_fmsubs},      {1849, &ppc_fmsubsdot},
-    {1850, &ppc_fmadds},      {1851, &ppc_fmaddsdot},   {1852, &ppc_fnmsubs},
-    {1853, &ppc_fnmsubsdot},  {1854, &ppc_fnmadds},     {1855, &ppc_fnmaddsdot},
-    {1906, &ppc_fmults},      {1907, &ppc_fmultsdot},   {1912, &ppc_fmsubs},
-    {1913, &ppc_fmsubsdot},   {1914, &ppc_fmadds},      {1915, &ppc_fmaddsdot},
-    {1916, &ppc_fnmsubs},     {1917, &ppc_fnmsubsdot},  {1918, &ppc_fnmadds},
-    {1919, &ppc_fnmaddsdot},  {1970, &ppc_fmults},      {1971, &ppc_fmultsdot},
-    {1976, &ppc_fmsubs},      {1977, &ppc_fmsubsdot},   {1978, &ppc_fmadds},
-    {1979, &ppc_fmaddsdot},   {1980, &ppc_fnmsubs},     {1981, &ppc_fnmsubsdot},
-    {1982, &ppc_fnmadds},     {1983, &ppc_fnmaddsdot},  {2034, &ppc_fmults},
-    {2035, &ppc_fmultsdot},   {2040, &ppc_fmsubs},      {2041, &ppc_fmsubsdot},
-    {2042, &ppc_fmadds},      {2043, &ppc_fmaddsdot},   {2044, &ppc_fnmsubs},
-    {2045, &ppc_fnmsubsdot},  {2046, &ppc_fnmadds},     {2047, &ppc_fnmaddsdot}
-};
+static PPCOpcode SubOpcode59Grabber[1024] = { ppc_illegalsubop59 };
 
 /** Double-precision floating-point instructions decoding table. */
-static std::unordered_map<uint16_t, PPCOpcode> SubOpcode63Grabber = {
-    {   0, &ppc_fcmpu},      {  24, &ppc_frsp},       {  25, &ppc_frspdot},
-    {  28, &ppc_fctiw},      {  29, &ppc_fctiwdot},   {  30, &ppc_fctiwz},
-    {  31, &ppc_fctiwzdot},  {  36, &ppc_fdiv},       {  37, &ppc_fdivdot},
-    {  40, &ppc_fsub},       {  41, &ppc_fsubdot},    {  42, &ppc_fadd},
-    {  43, &ppc_fadddot},    {  44, &ppc_fsqrt},      {  45, &ppc_fsqrtdot},
-    {  46, &ppc_fsel},       {  47, &ppc_fseldot},    {  50, &ppc_fmult},
-    {  51, &ppc_fmultdot},   {  52, &ppc_frsqrte},    {  53, &ppc_frsqrtedot},
-    {  56, &ppc_fmsub},      {  57, &ppc_fmsubdot},   {  58, &ppc_fmadd},
-    {  59, &ppc_fmadddot},   {  60, &ppc_fnmsub},     {  61, &ppc_fnmsubdot},
-    {  62, &ppc_fnmadd},     {  63, &ppc_fnmadddot},  {  64, &ppc_fcmpo},
-    {  76, &ppc_mtfsb1},     {  77, &ppc_mtfsb1dot},  {  80, &ppc_fneg},
-    {  81, &ppc_fnegdot},    { 110, &ppc_fsel},       { 111, &ppc_fseldot},
-    { 114, &ppc_fmult},      { 115, &ppc_fmultdot},   { 120, &ppc_fmsub},
-    { 121, &ppc_fmsubdot},   { 122, &ppc_fmadd},      { 123, &ppc_fmadd},
-    { 124, &ppc_fnmsub},     { 125, &ppc_fnmsubdot},  { 126, &ppc_fnmadd},
-    { 127, &ppc_fnmadddot},  { 128, &ppc_mcrfs},      { 140, &ppc_mtfsb0},
-    { 141, &ppc_mtfsb0dot},  { 144, &ppc_fmr},        { 174, &ppc_fsel},
-    { 175, &ppc_fseldot},    { 178, &ppc_fmult},      { 179, &ppc_fmultdot},
-    { 184, &ppc_fmsub},      { 185, &ppc_fmsubdot},   { 186, &ppc_fmadd},
-    { 187, &ppc_fmadddot},   { 188, &ppc_fnmsub},     { 189, &ppc_fnmsubdot},
-    { 190, &ppc_fnmadd},     { 191, &ppc_fnmadddot},  { 238, &ppc_fsel},
-    { 239, &ppc_fseldot},    { 242, &ppc_fmult},      { 243, &ppc_fmultdot},
-    { 248, &ppc_fmsub},      { 249, &ppc_fmsubdot},   { 250, &ppc_fmadd},
-    { 251, &ppc_fmadddot},   { 252, &ppc_fnmsub},     { 253, &ppc_fnmsubdot},
-    { 254, &ppc_fnmadd},     { 255, &ppc_fnmadddot},  { 268, &ppc_mtfsfi},
-    { 272, &ppc_fnabs},      { 273, &ppc_fnabsdot},   { 302, &ppc_fsel},
-    { 303, &ppc_fseldot},    { 306, &ppc_fmult},      { 307, &ppc_fmultdot},
-    { 312, &ppc_fmsub},      { 313, &ppc_fmsubdot},   { 314, &ppc_fmadd},
-    { 315, &ppc_fmadddot},   { 316, &ppc_fnmsub},     { 317, &ppc_fnmsubdot},
-    { 318, &ppc_fnmadd},     { 319, &ppc_fnmadddot},  { 366, &ppc_fsel},
-    { 367, &ppc_fseldot},    { 370, &ppc_fmult},      { 371, &ppc_fmultdot},
-    { 376, &ppc_fmsub},      { 377, &ppc_fmsubdot},   { 378, &ppc_fmadd},
-    { 379, &ppc_fmadddot},   { 380, &ppc_fnmsub},     { 381, &ppc_fnmsubdot},
-    { 382, &ppc_fnmadd},     { 383, &ppc_fnmadddot},  { 430, &ppc_fsel},
-    { 431, &ppc_fseldot},    { 434, &ppc_fmult},      { 435, &ppc_fmultdot},
-    { 440, &ppc_fmsub},      { 441, &ppc_fmsubdot},   { 442, &ppc_fmadd},
-    { 443, &ppc_fmadddot},   { 444, &ppc_fnmsub},     { 445, &ppc_fnmsubdot},
-    { 446, &ppc_fnmadd},     { 447, &ppc_fnmadddot},  { 494, &ppc_fsel},
-    { 495, &ppc_fseldot},    { 498, &ppc_fmult},      { 499, &ppc_fmultdot},
-    { 504, &ppc_fmsub},      { 505, &ppc_fmsubdot},   { 506, &ppc_fmadd},
-    { 507, &ppc_fmadddot},   { 508, &ppc_fnmsub},     { 509, &ppc_fnmsubdot},
-    { 510, &ppc_fnmadd},     { 511, &ppc_fnmadddot},  { 528, &ppc_fabs},
-    { 529, &ppc_fabsdot},    { 536, &ppc_mtfsfidot},  { 558, &ppc_fsel},
-    { 559, &ppc_fseldot},    { 562, &ppc_fmult},      { 563, &ppc_fmultdot},
-    { 568, &ppc_fmsub},      { 569, &ppc_fmsubdot},   { 570, &ppc_fmadd},
-    { 571, &ppc_fmadddot},   { 572, &ppc_fnmsub},     { 573, &ppc_fnmsubdot},
-    { 574, &ppc_fnmadd},     { 575, &ppc_fnmadddot},  { 622, &ppc_fsel},
-    { 623, &ppc_fseldot},    { 626, &ppc_fmult},      { 627, &ppc_fmultdot},
-    { 632, &ppc_fmsub},      { 633, &ppc_fmsubdot},   { 634, &ppc_fmadd},
-    { 635, &ppc_fmadddot},   { 636, &ppc_fnmsub},     { 637, &ppc_fnmsubdot},
-    { 638, &ppc_fnmadd},     { 639, &ppc_fnmadddot},  { 686, &ppc_fsel},
-    { 687, &ppc_fseldot},    { 690, &ppc_fmult},      { 691, &ppc_fmultdot},
-    { 696, &ppc_fmsub},      { 697, &ppc_fmsubdot},   { 698, &ppc_fmadd},
-    { 699, &ppc_fmadddot},   { 700, &ppc_fnmsub},     { 701, &ppc_fnmsubdot},
-    { 702, &ppc_fnmadd},     { 703, &ppc_fnmadddot},  { 750, &ppc_fsel},
-    { 751, &ppc_fseldot},    { 754, &ppc_fmult},      { 755, &ppc_fmultdot},
-    { 760, &ppc_fmsub},      { 761, &ppc_fmsubdot},   { 762, &ppc_fmadd},
-    { 763, &ppc_fmadddot},   { 764, &ppc_fnmsub},     { 765, &ppc_fnmsubdot},
-    { 766, &ppc_fnmadd},     { 767, &ppc_fnmadddot},  { 814, &ppc_fsel},
-    { 815, &ppc_fseldot},    { 818, &ppc_fmult},      { 819, &ppc_fmultdot},
-    { 824, &ppc_fmsub},      { 825, &ppc_fmsubdot},   { 826, &ppc_fmadd},
-    { 827, &ppc_fmadddot},   { 828, &ppc_fnmsub},     { 829, &ppc_fnmsubdot},
-    { 830, &ppc_fnmadd},     { 831, &ppc_fnmadddot},  { 878, &ppc_fsel},
-    { 879, &ppc_fseldot},    { 882, &ppc_fmult},      { 883, &ppc_fmultdot},
-    { 888, &ppc_fmsub},      { 889, &ppc_fmsubdot},   { 890, &ppc_fmadd},
-    { 891, &ppc_fmadddot},   { 892, &ppc_fnmsub},     { 893, &ppc_fnmsubdot},
-    { 894, &ppc_fnmadd},     { 895, &ppc_fnmadddot},  { 942, &ppc_fsel},
-    { 943, &ppc_fseldot},    { 946, &ppc_fmult},      { 947, &ppc_fmultdot},
-    { 952, &ppc_fmsub},      { 953, &ppc_fmsubdot},   { 954, &ppc_fmadd},
-    { 955, &ppc_fmadddot},   { 957, &ppc_fnmsub},     { 958, &ppc_fnmsubdot},
-    { 958, &ppc_fnmadd},     { 959, &ppc_fnmadddot},  {1006, &ppc_fsel},
-    {1007, &ppc_fseldot},    {1010, &ppc_fmult},      {1011, &ppc_fmultdot},
-    {1016, &ppc_fmsub},      {1017, &ppc_fmsubdot},   {1018, &ppc_fmadd},
-    {1019, &ppc_fmadddot},   {1020, &ppc_fnmsub},     {1021, &ppc_fnmsubdot},
-    {1022, &ppc_fnmadd},     {1023, &ppc_fnmadddot},  {1070, &ppc_fsel},
-    {1071, &ppc_fseldot},    {1074, &ppc_fmult},      {1075, &ppc_fmultdot},
-    {1080, &ppc_fmsub},      {1081, &ppc_fmsubdot},   {1082, &ppc_fmadd},
-    {1083, &ppc_fmadddot},   {1084, &ppc_fnmsub},     {1085, &ppc_fnmsubdot},
-    {1086, &ppc_fnmadd},     {1087, &ppc_fnmadddot},  {1134, &ppc_fsel},
-    {1135, &ppc_fseldot},    {1138, &ppc_fmult},      {1139, &ppc_fmultdot},
-    {1144, &ppc_fmsub},      {1145, &ppc_fmsubdot},   {1146, &ppc_fmadd},
-    {1147, &ppc_fmadddot},   {1148, &ppc_fnmsub},     {1149, &ppc_fnmsubdot},
-    {1150, &ppc_fnmadd},     {1151, &ppc_fnmadddot},  {1166, &ppc_mffs},
-    {1167, &ppc_mffsdot},    {1198, &ppc_fsel},       {1199, &ppc_fseldot},
-    {1202, &ppc_fmult},      {1203, &ppc_fmultdot},   {1208, &ppc_fmsub},
-    {1209, &ppc_fmsubdot},   {1210, &ppc_fmadd},      {1211, &ppc_fmadddot},
-    {1212, &ppc_fnmsub},     {1213, &ppc_fnmsubdot},  {1214, &ppc_fnmadd},
-    {1215, &ppc_fnmadddot},  {1262, &ppc_fsel},       {1263, &ppc_fseldot},
-    {1266, &ppc_fmult},      {1267, &ppc_fmultdot},   {1272, &ppc_fmsub},
-    {1273, &ppc_fmsubdot},   {1274, &ppc_fmadd},      {1275, &ppc_fmadddot},
-    {1276, &ppc_fnmsub},     {1277, &ppc_fnmsubdot},  {1278, &ppc_fnmadd},
-    {1279, &ppc_fnmadddot},  {1326, &ppc_fsel},       {1327, &ppc_fseldot},
-    {1330, &ppc_fmult},      {1331, &ppc_fmultdot},   {1336, &ppc_fmsub},
-    {1337, &ppc_fmsubdot},   {1338, &ppc_fmadd},      {1339, &ppc_fmadddot},
-    {1340, &ppc_fnmsub},     {1341, &ppc_fnmsubdot},  {1342, &ppc_fnmadd},
-    {1343, &ppc_fnmadddot},  {1390, &ppc_fsel},       {1391, &ppc_fseldot},
-    {1394, &ppc_fmult},      {1395, &ppc_fmultdot},   {1400, &ppc_fmsub},
-    {1401, &ppc_fmsubdot},   {1402, &ppc_fmadd},      {1403, &ppc_fmadddot},
-    {1404, &ppc_fnmsub},     {1405, &ppc_fnmsubdot},  {1406, &ppc_fnmadd},
-    {1407, &ppc_fnmadddot},  {1422, &ppc_mtfsf},      {1423, &ppc_mtfsfdot},
-    {1454, &ppc_fsel},       {1455, &ppc_fseldot},    {1458, &ppc_fmult},
-    {1459, &ppc_fmultdot},   {1464, &ppc_fmsub},      {1465, &ppc_fmsubdot},
-    {1466, &ppc_fmadd},      {1467, &ppc_fmadddot},   {1468, &ppc_fnmsub},
-    {1469, &ppc_fnmsubdot},  {1470, &ppc_fnmadd},     {1471, &ppc_fnmadddot},
-    {1518, &ppc_fsel},       {1519, &ppc_fseldot},    {1522, &ppc_fmult},
-    {1523, &ppc_fmultdot},   {1528, &ppc_fmsub},      {1529, &ppc_fmsubdot},
-    {1530, &ppc_fmadd},      {1531, &ppc_fmadddot},   {1532, &ppc_fnmsub},
-    {1533, &ppc_fnmsubdot},  {1534, &ppc_fnmadd},     {1535, &ppc_fnmadddot},
-    {1582, &ppc_fsel},       {1583, &ppc_fseldot},    {1586, &ppc_fmult},
-    {1587, &ppc_fmultdot},   {1592, &ppc_fmsub},      {1593, &ppc_fmsubdot},
-    {1594, &ppc_fmadd},      {1595, &ppc_fmadddot},   {1596, &ppc_fnmsub},
-    {1597, &ppc_fnmsubdot},  {1598, &ppc_fnmadd},     {1599, &ppc_fnmadddot},
-    {1646, &ppc_fsel},       {1647, &ppc_fseldot},    {1650, &ppc_fmult},
-    {1651, &ppc_fmultdot},   {1656, &ppc_fmsub},      {1657, &ppc_fmsubdot},
-    {1658, &ppc_fmadd},      {1659, &ppc_fmadddot},   {1660, &ppc_fnmsub},
-    {1661, &ppc_fnmsubdot},  {1662, &ppc_fnmadd},     {1663, &ppc_fnmadddot},
-    {1710, &ppc_fsel},       {1711, &ppc_fseldot},    {1714, &ppc_fmult},
-    {1715, &ppc_fmultdot},   {1720, &ppc_fmsub},      {1721, &ppc_fmsubdot},
-    {1722, &ppc_fmadd},      {1723, &ppc_fmadddot},   {1724, &ppc_fnmsub},
-    {1725, &ppc_fnmsubdot},  {1726, &ppc_fnmadd},     {1727, &ppc_fnmadddot},
-    {1774, &ppc_fsel},       {1775, &ppc_fseldot},    {1778, &ppc_fmult},
-    {1779, &ppc_fmultdot},   {1784, &ppc_fmsub},      {1785, &ppc_fmsubdot},
-    {1786, &ppc_fmadd},      {1787, &ppc_fmadddot},   {1788, &ppc_fnmsub},
-    {1789, &ppc_fnmsubdot},  {1790, &ppc_fnmadd},     {1791, &ppc_fnmadddot},
-    {1838, &ppc_fsel},       {1839, &ppc_fseldot},    {1842, &ppc_fmult},
-    {1843, &ppc_fmultdot},   {1848, &ppc_fmsub},      {1849, &ppc_fmsubdot},
-    {1850, &ppc_fmadd},      {1851, &ppc_fmadddot},   {1852, &ppc_fnmsub},
-    {1853, &ppc_fnmsubdot},  {1854, &ppc_fnmadd},     {1855, &ppc_fnmadddot},
-    {1902, &ppc_fsel},       {1903, &ppc_fseldot},    {1906, &ppc_fmult},
-    {1907, &ppc_fmultdot},   {1912, &ppc_fmsub},      {1913, &ppc_fmsubdot},
-    {1914, &ppc_fmadd},      {1915, &ppc_fmadddot},   {1916, &ppc_fnmsub},
-    {1917, &ppc_fnmsubdot},  {1918, &ppc_fnmadd},     {1919, &ppc_fnmadddot},
-    {1966, &ppc_fsel},       {1967, &ppc_fseldot},    {1970, &ppc_fmult},
-    {1971, &ppc_fmultdot},   {1976, &ppc_fmsub},      {1977, &ppc_fmsubdot},
-    {1978, &ppc_fmadd},      {1979, &ppc_fmadddot},   {1980, &ppc_fnmsub},
-    {1981, &ppc_fnmsubdot},  {1982, &ppc_fnmadd},     {1983, &ppc_fnmadddot},
-    {2030, &ppc_fsel},       {2031, &ppc_fseldot},    {2034, &ppc_fmult},
-    {2035, &ppc_fmultdot},   {2040, &ppc_fmsub},      {2041, &ppc_fmsubdot},
-    {2042, &ppc_fmadd},      {2043, &ppc_fmadddot},   {2044, &ppc_fnmsub},
-    {2045, &ppc_fnmsubdot},  {2046, &ppc_fnmadd},     {2047, &ppc_fnmadddot}
-};
+static PPCOpcode SubOpcode63Grabber[1024] = { ppc_illegalsubop63 };
 
 /** Opcode decoding functions. */
 
@@ -478,7 +226,7 @@ void ppc_opcode31() {
 }
 
 void ppc_opcode59() {
-    uint16_t subop_grab = ppc_cur_instruction & 0x7FF;
+    uint16_t subop_grab = (ppc_cur_instruction & 0x7FF) >> 1;
     rc_flag = subop_grab & 1;
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
@@ -488,7 +236,7 @@ void ppc_opcode59() {
 }
 
 void ppc_opcode63() {
-    uint16_t subop_grab = ppc_cur_instruction & 0x7FF;
+    uint16_t subop_grab = (ppc_cur_instruction & 0x7FF) >> 1;
     rc_flag = subop_grab & 1;
 #ifdef EXHAUSTIVE_DEBUG
     uint32_t regrab = (uint32_t)subop_grab;
@@ -864,10 +612,84 @@ void ppc_opcode31_init() {
     SubOpcode31Grabber[1010] = ppc_tlbli;
 }
 
+void ppc_opcode59_init() {
+    SubOpcode63Grabber[18] = ppc_fdivs;
+    SubOpcode63Grabber[20] = ppc_fsubs;
+    SubOpcode63Grabber[22] = ppc_fsqrts;
+    SubOpcode63Grabber[24] = ppc_fres;
+
+    for (int i = 25; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fmults;
+    }
+
+    for (int i = 28; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fmsubs;
+    }
+
+    for (int i = 29; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fmadds;
+    }
+
+    for (int i = 30; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fnmsubs;
+    }
+
+    for (int i = 31; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fnmadds;
+    }
+}
+
+void ppc_opcode63_init() {
+    SubOpcode63Grabber[0] = ppc_fcmpu;
+    SubOpcode63Grabber[12] = ppc_frsp;
+    SubOpcode63Grabber[14] = ppc_fctiw;
+    SubOpcode63Grabber[15] = ppc_fctiwz;
+    SubOpcode63Grabber[18] = ppc_fdiv;
+    SubOpcode63Grabber[20] = ppc_fsub;
+    SubOpcode63Grabber[21] = ppc_fadd;
+    SubOpcode63Grabber[22] = ppc_fsqrt;
+    SubOpcode63Grabber[26] = ppc_frsqrte;
+    SubOpcode63Grabber[32] = ppc_fcmpo;
+    SubOpcode63Grabber[38] = ppc_mtfsb1;
+    SubOpcode63Grabber[40] = ppc_fneg;
+    SubOpcode63Grabber[64] = ppc_mcrfs;
+    SubOpcode63Grabber[70] = ppc_mtfsb0;
+    SubOpcode63Grabber[72] = ppc_fmr;
+    SubOpcode63Grabber[134] = ppc_mtfsfi;
+    SubOpcode63Grabber[136] = ppc_fnabs;
+    SubOpcode63Grabber[264] = ppc_fabs;
+    SubOpcode63Grabber[583] = ppc_mffs;
+    SubOpcode63Grabber[711] = ppc_mtfsf;
+
+    for (int i = 23; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fsel;
+    }
+
+    for (int i = 25; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fmult;
+    }
+
+    for (int i = 28; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fmsub;
+    }
+
+    for (int i = 29; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fmadd;
+    }
+
+    for (int i = 30; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fnmsub;
+    }
+
+    for (int i = 31; i < 1024; i += 32) {
+        SubOpcode63Grabber[i] = ppc_fnmadd;
+    }
+}
+
 void ppc_init_opcode_tables() {
     ppc_opcode31_init();
-
-    //TODO: INSERT TABLES FOR OPCODES 59 and 63
+    ppc_opcode59_init();
+    ppc_opcode63_init();
 }
 
 void ppc_cpu_init(MemCtrlBase *mem_ctrl, uint32_t proc_version)
