@@ -322,20 +322,10 @@ void power_sle() {
     uint32_t insert_final = ((ppc_result_d << rot_amt) | (ppc_result_d >> (32 - rot_amt)));
     ppc_state.spr[SPR::MQ] = insert_final & insert_mask;
     ppc_result_a = insert_final & insert_mask;
-    ppc_store_result_rega();
-}
 
-void power_sledot() {
-    ppc_grab_regssa();
-    uint32_t insert_mask = 0;
-    uint32_t rot_amt = ppc_result_b & 31;
-    for (uint32_t i = 31; i > rot_amt; i--) {
-        insert_mask |= (1 << i);
-    }
-    uint32_t insert_final = ((ppc_result_d << rot_amt) | (ppc_result_d >> (32 - rot_amt)));
-    ppc_state.spr[SPR::MQ] = insert_final & insert_mask;
-    ppc_result_a = insert_final & insert_mask;
-    ppc_changecrf0(ppc_result_a);
+    if (rc_flag)
+        ppc_changecrf0(ppc_result_a);
+
     ppc_store_result_rega();
 }
 
@@ -358,8 +348,10 @@ void power_sleq() {
 
     ppc_result_a = insert_end;
     ppc_state.spr[SPR::MQ] = insert_start;
+
     if (rc_flag)
         ppc_changecrf0(ppc_result_a);
+
     ppc_store_result_rega();
 }
 
@@ -382,8 +374,10 @@ void power_sliq() {
 
     ppc_result_a = insert_end & insert_mask;
     ppc_state.spr[SPR::MQ] = insert_start;
+
     if (rc_flag)
         ppc_changecrf0(ppc_result_a);
+
     ppc_store_result_rega();
 }
 
@@ -406,8 +400,10 @@ void power_slliq() {
 
     ppc_result_a = insert_end;
     ppc_state.spr[SPR::MQ] = insert_start;
+
     if (rc_flag)
         ppc_changecrf0(ppc_result_a);
+
     ppc_store_result_rega();
 }
 
@@ -415,32 +411,16 @@ void power_sllq() {
     LOG_F(WARNING, "OOPS! Placeholder for sllq!!! \n");
 }
 
-void power_sllqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for sllq.!!! \n");
-}
-
 void power_slq() {
     LOG_F(WARNING, "OOPS! Placeholder for slq!!! \n");
-}
-
-void power_slqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for slq.!!! \n");
 }
 
 void power_sraiq() {
     LOG_F(WARNING, "OOPS! Placeholder for sraiq!!! \n");
 }
 
-void power_sraiqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for sraiq.!!! \n");
-}
-
 void power_sraq() {
     LOG_F(WARNING, "OOPS! Placeholder for sraq!!! \n");
-}
-
-void power_sraqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for sraq.!!! \n");
 }
 
 void power_sre() {
@@ -485,29 +465,10 @@ void power_sreq() {
 
     ppc_result_a = insert_end;
     ppc_state.spr[SPR::MQ] = insert_start;
-    ppc_store_result_rega();
-}
 
-void power_sreqdot() {
-    ppc_grab_regssa();
-    uint32_t insert_mask = 0;
-    unsigned rot_sh = ppc_result_b & 31;
-    for (uint32_t i = 31; i > rot_sh; i--) {
-        insert_mask |= (1 << i);
-    }
-    uint32_t insert_start = ((ppc_result_d >> rot_sh) | (ppc_result_d << (32 - rot_sh)));
-    uint32_t insert_end = ppc_state.spr[SPR::MQ];
+    if (rc_flag)
+        ppc_changecrf0(ppc_result_a);
 
-    for (int i = 0; i < 32; i++) {
-        if (insert_mask & (1 << i)) {
-            insert_end &= ~(1 << i);
-            insert_end |= (insert_start & (1 << i));
-        }
-    }
-
-    ppc_result_a = insert_end;
-    ppc_state.spr[SPR::MQ] = insert_start;
-    ppc_changecrf0(ppc_result_a);
     ppc_store_result_rega();
 }
 
@@ -530,29 +491,10 @@ void power_sriq() {
 
     ppc_result_a = insert_end;
     ppc_state.spr[SPR::MQ] = insert_start;
-    ppc_store_result_rega();
-}
 
-void power_sriqdot() {
-    ppc_grab_regssa();
-    uint32_t insert_mask = 0;
-    unsigned rot_sh = (ppc_cur_instruction >> 11) & 31;
-    for (uint32_t i = 31; i > rot_sh; i--) {
-        insert_mask |= (1 << i);
-    }
-    uint32_t insert_start = ((ppc_result_d >> rot_sh) | (ppc_result_d << (32 - rot_sh)));
-    uint32_t insert_end = ppc_state.spr[SPR::MQ];
+    if (rc_flag)
+        ppc_changecrf0(ppc_result_a);
 
-    for (int i = 0; i < 32; i++) {
-        if (insert_mask & (1 << i)) {
-            insert_end &= ~(1 << i);
-            insert_end |= (insert_start & (1 << i));
-        }
-    }
-
-    ppc_result_a = insert_end;
-    ppc_state.spr[SPR::MQ] = insert_start;
-    ppc_changecrf0(ppc_result_a);
     ppc_store_result_rega();
 }
 
@@ -560,22 +502,10 @@ void power_srliq() {
     LOG_F(WARNING, "OOPS! Placeholder for slriq!!! \n");
 }
 
-void power_srliqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for slriq.!!! \n");
-}
-
 void power_srlq() {
     LOG_F(WARNING, "OOPS! Placeholder for slrq!!! \n");
 }
 
-void power_srlqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for slrq.!!! \n");
-}
-
 void power_srq() {
     LOG_F(WARNING, "OOPS! Placeholder for srq!!! \n");
-}
-
-void power_srqdot() {
-    LOG_F(WARNING, "OOPS! Placeholder for srq.!!! \n");
 }
