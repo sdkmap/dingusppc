@@ -355,7 +355,7 @@ void ppc_subfme() {
     ppc_carry(~ppc_result_a, ppc_result_d);
 
     if (oe_flag)
-        ppc_setsoov(ppc_result_b, ppc_result_a, ppc_result_d);
+        ppc_setsoov(0xFFFFFFFF, ppc_result_a, ppc_result_d);
     if (rc_flag)
         ppc_changecrf0(ppc_result_d);
 
