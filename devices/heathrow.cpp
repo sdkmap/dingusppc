@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "awacs.h"
 #include "dbdma.h"
+#include "escc.h"
 #include "machines/machinebase.h"
 #include "macio.h"
 #include "viacuda.h"
@@ -44,6 +45,8 @@ HeathrowIC::HeathrowIC() : PCIDevice("mac-io/heathrow") {
     this->screamer    = new AWACDevice();
     this->snd_out_dma = new DMAChannel(this->screamer);
     this->screamer->set_dma_out(this->snd_out_dma);
+
+    this->escc = new ESCC();
 }
 
 HeathrowIC::~HeathrowIC() {
@@ -121,12 +124,36 @@ uint32_t HeathrowIC::read(uint32_t reg_start, uint32_t offset, int size) {
     case 8:
         res = dma_read(offset - 0x8000, size);
         break;
+    case 0x10:
+        LOG_F(WARNING, "SCSI Read - Offset: %x; Size: %x\n", offset, size);
+        res = 0;    // TEMP!!!
+        break;
+    case 0x11:
+        LOG_F(WARNING, "BMAC Read - Offset: %x; Size: %x\n", offset, size);
+        res = 0;    // TEMP!!! 
+        break;
+    case 0x12:
+        //LOG_F(WARNING, "LEGACY ESCC Read - Offset: %x; Size: %x\n", offset, size);
+        res = 0xc0;    // TEMP!!! 
+        break;
+    case 0x13:
+        LOG_F(WARNING, "ESCC Read - Offset: %x; Size: %x\n", offset, size);
+        res = 0;    // TEMP!!! 
+        break;
     case 0x14:
         res = this->screamer->snd_ctrl_read(offset - 0x14000, size);
+        break;
+    case 0x15:
+        LOG_F(WARNING, "SWIM 3 Read - Offset: %x; Size: %x\n", offset, size);
+        res = 0;    // TEMP!!! 
         break;
     case 0x16:
     case 0x17:
         res = this->viacuda->read((offset - 0x16000) >> 9);
+        break;
+    case 0x20:
+        LOG_F(WARNING, "IDE Read - Offset: %x; Size: %x\n", offset, size);
+        res = 0;    // TEMP!!!
         break;
     default:
         if (sub_addr >= 0x60) {
@@ -151,12 +178,30 @@ void HeathrowIC::write(uint32_t reg_start, uint32_t offset, uint32_t value, int 
     case 8:
         dma_write(offset - 0x8000, value, size);
         break;
+    case 0x10:
+        LOG_F(WARNING, "SCSI Write - Offset: %x; Value: %x; Size: %x\n", offset, value, size);
+        break;
+    case 0x11:
+        LOG_F(WARNING, "BMAC Write - Offset: %x; Value: %x; Size: %x\n", offset, value, size);
+        break;
+    case 0x12:
+        LOG_F(WARNING, "LEGACY ESCC Write - Offset: %x; Value: %x; Size: %x\n", offset, value, size);
+        break;
+    case 0x13:
+        this->escc->escc_write((offset - 0x13000), value, size);
+        break;
     case 0x14:
         this->screamer->snd_ctrl_write(offset - 0x14000, value, size);
+        break;
+    case 0x15:
+        LOG_F(WARNING, "SWIM 3 Write - Offset: %x; Value: %x; Size: %x\n", offset, value, size);
         break;
     case 0x16:
     case 0x17:
         this->viacuda->write((offset - 0x16000) >> 9, value);
+        break;
+    case 0x20:
+        LOG_F(WARNING, "IDE Write - Offset: %x; Value: %x; Size: %x\n", offset, value, size);
         break;
     default:
         if (sub_addr >= 0x60) {
@@ -171,6 +216,10 @@ uint32_t HeathrowIC::mio_ctrl_read(uint32_t offset, int size) {
     uint32_t res = 0;
 
     switch (offset & 0xFF) {
+    case 0x10:
+        LOG_F(9, "read from MIO:Int_Events2 register \n");
+        res = this->int_events2;
+        break;
     case 0x14:
         LOG_F(9, "read from MIO:Int_Mask2 register \n");
         res = this->int_mask2;
@@ -182,6 +231,10 @@ uint32_t HeathrowIC::mio_ctrl_read(uint32_t offset, int size) {
     case 0x1C:
         LOG_F(9, "read from MIO:Int_Levels2 register \n");
         res = this->int_levels2;
+        break;
+    case 0x20:
+        LOG_F(9, "read from MIO:Int_Events2 register \n");
+        res = this->int_events2;
         break;
     case 0x24:
         LOG_F(9, "read from MIO:Int_Mask1 register \n");
@@ -212,17 +265,25 @@ uint32_t HeathrowIC::mio_ctrl_read(uint32_t offset, int size) {
 
 void HeathrowIC::mio_ctrl_write(uint32_t offset, uint32_t value, int size) {
     switch (offset & 0xFF) {
+    case 0x10:
+        LOG_F(9, "write %x from MIO:Int_Events2 register \n", value);
+        this->int_events2 = value;
+        break;
     case 0x14:
-        LOG_F(9, "read from MIO:Int_Mask2 register \n");
+        LOG_F(9, "write %x from MIO:Int_Mask2 register \n", value);
         this->int_mask2 = value;
         break;
     case 0x18:
-        LOG_F(9, "read from MIO:Int_Clear2 register \n");
+        LOG_F(9, "write %x from MIO:Int_Clear2 register \n", value);
         this->int_clear2 = value;
         break;
     case 0x1C:
-        LOG_F(9, "read from MIO:Int_Levels2 register \n");
+        LOG_F(9, "write %x from MIO:Int_Levels2 register \n", value);
         this->int_levels2 = value;
+        break;
+    case 0x20:
+        LOG_F(9, "write %x from MIO:Int_Events1 register \n", value);
+        this->int_events1 = value;
         break;
     case 0x24:
         LOG_F(9, "write %x to MIO:Int_Mask1 register \n", value);
@@ -233,7 +294,7 @@ void HeathrowIC::mio_ctrl_write(uint32_t offset, uint32_t value, int size) {
         this->int_clear1 = value;
         break;
     case 0x2C:
-        LOG_F(9, "read from MIO:Int_Levels1 register \n");
+        LOG_F(9, "write %x to MIO:Int_Levels1 register \n", value);
         this->int_levels1 = value;
         break;
     case 0x38:
