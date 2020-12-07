@@ -53,6 +53,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "awacs.h"
 #include "dbdma.h"
+#include "escc.h"
 #include "hwcomponent.h"
 #include "memctrlbase.h"
 #include "mmiodevice.h"
@@ -135,9 +136,11 @@ private:
         0x00    // unknown defaults
     };
 
+    uint32_t int_events2 = 0;
     uint32_t int_mask2   = 0;
     uint32_t int_clear2  = 0;
     uint32_t int_levels2 = 0;
+    uint32_t int_events1 = 0;
     uint32_t int_mask1   = 0;
     uint32_t int_clear1  = 0;
     uint32_t int_levels1 = 0;
@@ -147,6 +150,7 @@ private:
     ViaCuda* viacuda;     /* VIA cell with Cuda MCU attached to it */
     NVram* nvram;         /* NVRAM cell */
     AWACDevice* screamer; /* Screamer audio codec instance */
+    ESCC* escc; /* Screamer audio codec instance */
 
     DMAChannel* snd_out_dma;
 };
