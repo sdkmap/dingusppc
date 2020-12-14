@@ -516,17 +516,22 @@ void dppc_interpreter::ppc_neg() {
 void dppc_interpreter::ppc_cntlzw() {
     ppc_grab_regssa();
 
-    uint32_t lead;
+    uint32_t lead      = 0;
+    uint32_t mask      = 0x80000000UL;
     uint32_t bit_check = ppc_result_d;
 
 #ifdef USE_GCC_BUILTINS
     lead = !bit_check ? 32 : __builtin_clz(bit_check);
 #elif defined USE_VS_BUILTINS
-    lead = __lzcnt(bit_check);
+    lead = !bit_check ? 32 : __lzcnt(bit_check);
 #else
-    for (uint32_t mask = 0x80000000UL, lead = 0; mask; lead++, mask >>= 1) {
+    while (mask > 0){
         if (bit_check & mask)
             break;
+        else {
+            mask >>= 1;
+            lead++;
+        }
     }
 #endif
     ppc_result_a = lead;
