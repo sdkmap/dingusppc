@@ -24,17 +24,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <cinttypes>
 
+enum { 
+    NOT_LEGACY_ESCC = 0,
+    LEGACY_ESCC = 1
+};
+
 class ESCC {
 public:
     ESCC();
     ~ESCC();
 
 //protected:
-    uint8_t escc_read(uint32_t offset, int size);
-    void escc_write(uint32_t offset, uint8_t value, int size);
-
-    uint8_t escc_legacy_read(uint32_t offset, int size);
-    void escc_legacy_write(uint32_t offset, uint8_t value, int size);
+    uint8_t escc_read(bool is_legacy, uint32_t offset, int size);
+    void escc_write(bool is_legacy, uint32_t offset, uint8_t value, int size);
 
 private:
     uint8_t escc_reg[16];

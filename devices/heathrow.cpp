@@ -188,7 +188,7 @@ void HeathrowIC::write(uint32_t reg_start, uint32_t offset, uint32_t value, int 
         LOG_F(WARNING, "LEGACY ESCC Write - Offset: %x; Value: %x; Size: %x\n", offset, value, size);
         break;
     case 0x13:
-        this->escc->escc_write((offset - 0x13000), value, size);
+        this->escc->escc_write(false, (offset - 0x13000), value, size);
         break;
     case 0x14:
         this->screamer->snd_ctrl_write(offset - 0x14000, value, size);

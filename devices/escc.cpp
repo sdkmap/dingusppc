@@ -30,35 +30,32 @@ ESCC::ESCC() {}
 
 ESCC::~ESCC() {}
 
-uint8_t ESCC::escc_read(uint32_t offset, int size) {
+uint8_t ESCC::escc_read(bool is_legacy, uint32_t offset, int size) {
     return 0;
 }
 
-void ESCC::escc_write(uint32_t offset, uint8_t value, int size) {
-    if (offset == 0x20) {
-        if (!prep_value) {
-            store_reg = value & 0xF;
-            prep_value = true;
-        } 
-        else {
-            escc_reg[store_reg] = value;
-            prep_value = false;
+void ESCC::escc_write(bool is_legacy, uint32_t offset, uint8_t value, int size) {
+    if (is_legacy) {
+        if (offset == 0x02) {
+            if (!prep_value) {
+                store_reg  = value & 0xF;
+                prep_value = true;
+            } else {
+                escc_reg[store_reg] = value;
+                prep_value          = false;
+            }
         }
-    }
-}
 
-uint8_t ESCC::escc_legacy_read(uint32_t offset, int size) {
-    return 0;
-}
-
-void ESCC::escc_legacy_write(uint32_t offset, uint8_t value, int size) {
-    if (offset == 0x0) {
-        if (!prep_value) {
-            store_reg  = value & 0xF;
-            prep_value = true;
-        } else {
-            escc_reg[store_reg] = value;
-            prep_value          = false;
+    } 
+    else {
+        if (offset == 0x20) {
+            if (!prep_value) {
+                store_reg  = value & 0xF;
+                prep_value = true;
+            } else {
+                escc_reg[store_reg] = value;
+                prep_value          = false;
+            }
         }
     }
 }
