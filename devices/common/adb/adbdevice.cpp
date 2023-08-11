@@ -88,6 +88,10 @@ bool AdbDevice::get_register_3() {
     return true;
 }
 
+bool AdbDevice::assert_srq() {
+    return this->srq_flag;
+}
+
 uint8_t AdbDevice::gen_random_address() {
     return (TimerManager::get_instance()->current_time_ns() + 8) & 0xF;
 }

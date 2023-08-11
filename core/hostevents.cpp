@@ -46,12 +46,21 @@ void EventManager::poll_events()
             }
             break;
 
-        case SDL_KEYDOWN:
-            key_downs++;
+        case SDL_KEYDOWN: {
+                KeyboardEvent ke;
+                ke.key_code = event.key.keysym.sym;
+                ke.flags    = KEYBOARD_EVENT_DOWN;
+                this->_keyboard_signal.emit(ke);
+                key_downs++;
+            }
             break;
 
-        case SDL_KEYUP:
-            key_ups++;
+        case SDL_KEYUP: {
+                KeyboardEvent ke;
+                ke.flags = KEYBOARD_EVENT_UP;
+                this->_keyboard_signal.emit(ke);
+                key_ups++;
+            }
             break;
 
         case SDL_MOUSEMOTION: {

@@ -479,7 +479,7 @@ void ViaCuda::autopoll_handler() {
         return;
 
     // send TALK R0 command to address 3 (mouse)
-    uint8_t in_data[2] = { 0x3C, 0};
+    uint8_t in_data[2] = {poll_cmd, 0};
 
     adb_status = this->adb_bus_obj->process_command(in_data, 1);
 
@@ -490,7 +490,7 @@ void ViaCuda::autopoll_handler() {
 
         // prepare autopoll packet
         response_header(CUDA_PKT_ADB, adb_status | ADB_STAT_AUTOPOLL);
-        this->out_buf[2] = 0x3C; // put the proper ADB command
+        this->out_buf[2] = poll_cmd;    // put the proper ADB command
         output_size = this->adb_bus_obj->get_output_count();
         if (output_size) {
             std::memcpy(&this->out_buf[3], this->adb_bus_obj->get_output_buf(), output_size);
@@ -503,6 +503,14 @@ void ViaCuda::autopoll_handler() {
 
         // draw guest system's attention
         schedule_sr_int(USECS_TO_NSECS(30));
+    }
+
+    //alternate between mouse and keyboard between cycles
+    if (poll_cmd == 0x3C) {
+        poll_cmd = 0x2C;
+    }
+    else if (poll_cmd == 0x2C) {
+        poll_cmd = 0x3C;
     }
 }
 

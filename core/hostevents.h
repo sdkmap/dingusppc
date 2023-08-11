@@ -39,7 +39,7 @@ enum : uint32_t {
     MOUSE_EVENT_MOTION = 1 << 0,
     MOUSE_EVENT_BUTTON = 1 << 1,
     KEYBOARD_EVENT_DOWN = 1 << 0,
-    KEYBOARD_EVENT_UP = 1 << 1,
+    KEYBOARD_EVENT_UP = 1 << 7,
 };
 
 class MouseEvent {
@@ -59,8 +59,12 @@ public:
     ~KeyboardEvent() = default;
 
     uint32_t flags;
-    uint32_t key;
-    uint16_t keys_state;
+    uint32_t key_code;
+    uint16_t led_lights;
+    uint8_t key_buffer[16];
+    uint8_t key_state[128];
+    uint8_t adb_code;
+    bool key_pressed;
 };
 
 class EventManager {

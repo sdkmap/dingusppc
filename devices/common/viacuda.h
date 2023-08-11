@@ -206,6 +206,7 @@ private:
     uint8_t  old_byteack;
     uint8_t  treq;
     uint8_t  in_buf[CUDA_IN_BUF_SIZE];
+    uint8_t  poll_cmd = 0x3C;
     int32_t  in_count;
     uint8_t  out_buf[16];
     int32_t  out_count;
