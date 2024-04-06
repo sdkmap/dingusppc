@@ -113,6 +113,7 @@ jobs:
           diffutils \
           flex \
           tar \
+          cmake \
           wget \
           git \
           grep \
@@ -122,6 +123,7 @@ jobs:
           glib2-devel \
           patch \
           sed \
+          mingw-w64-x86_64-cmake \
           mingw-w64-x86_64-binutils \
           mingw-w64-x86_64-capstone \
           mingw-w64-x86_64-ccache \
