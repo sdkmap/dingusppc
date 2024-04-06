@@ -166,10 +166,10 @@ jobs:
           $env:CC = "ccache gcc"
           mkdir build
           cd build
-          D:\a\qemu\qemu\msys64\usr\bin\bash -lc "ccache --zero-stats"
-          D:\a\qemu\qemu\msys64\usr\bin\bash -lc "cmake -DCMAKE_BUILD_TYPE=Release -DPPC_BUILD_PPC_TESTS=True .."
-          D:\a\qemu\qemu\msys64\usr\bin\bash -lc "make -j$(nproc) CFLAGS="-Wall -Wno-error=pointer-to-int-cast -O2""
-          D:\a\qemu\qemu\msys64\usr\bin\bash -lc "ccache --show-stats"
+          D:\a\dingusppc\dingusppc\msys64\usr\bin\bash -lc "ccache --zero-stats"
+          D:\a\dingusppc\dingusppc\msys64\usr\bin\bash -lc "cmake -DCMAKE_BUILD_TYPE=Release -DPPC_BUILD_PPC_TESTS=True .."
+          D:\a\dingusppc\dingusppc\msys64\usr\bin\bash -lc "make -j$(nproc) CFLAGS="-Wall -Wno-error=pointer-to-int-cast -O2""
+          D:\a\dingusppc\dingusppc\msys64\usr\bin\bash -lc "ccache --show-stats"
           Write-Output "Finished build at $(Get-Date -Format u)"
           
       - name: Upload Releases 
